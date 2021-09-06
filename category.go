@@ -7,10 +7,10 @@ import (
 )
 
 type DataCategory struct {
-	Id         string `mapstructure:"id" json:"id,omitempty" gorm:"column:id;primary_key" bson:"_id,omitempty" dynamodbav:"id,omitempty" firestore:"-"`
-	Title      string `mapstructure:"title" json:"title,omitempty" gorm:"column:title" bson:"title,omitempty" dynamodbav:"title,omitempty" firestore:"title,omitempty"`
-	Assignable bool   `mapstructure:"assignable" json:"assignable,omitempty" gorm:"column:assignable" bson:"assignable,omitempty" dynamodbav:"assignable,omitempty" firestore:"assignable,omitempty"`
-	ChannelId  string `mapstructure:"channelId" json:"channelId,omitempty" gorm:"column:channelId" bson:"channelId,omitempty" dynamodbav:"channelId,omitempty" firestore:"channelId,omitempty"`
+	Id         string `mapstructure:"id" json:"id,omitempty" gorm:"column:id;primary_key" bson:"_id,omitempty" dynamodbav:"id,omitempty" firestore:"-" cql:"id"`
+	Title      string `mapstructure:"title" json:"title,omitempty" gorm:"column:title" bson:"title,omitempty" dynamodbav:"title,omitempty" firestore:"title,omitempty" cql:"title"`
+	Assignable bool   `mapstructure:"assignable" json:"assignable,omitempty" gorm:"column:assignable" bson:"assignable,omitempty" dynamodbav:"assignable,omitempty" firestore:"assignable,omitempty" cql:"assignable"`
+	ChannelId  string `mapstructure:"channelId" json:"channelId,omitempty" gorm:"column:channelId" bson:"channelId,omitempty" dynamodbav:"channelId,omitempty" firestore:"channelId,omitempty" cql:"channelid"`
 }
 
 type Categories struct {
