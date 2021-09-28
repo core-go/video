@@ -1,5 +1,5 @@
 package video
 
 type CategoryClient interface {
-	GetCagetories(regionCode string) (*[]DataCategory, error)
+	GetCategories(regionCode string) (*[]DataCategory, error)
 }
