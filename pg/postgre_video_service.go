@@ -18,48 +18,48 @@ import (
 type PostgreVideoService struct {
 	db                  *sql.DB
 	tubeCategory        category.CategorySyncClient
-	fieldsIndexChannel  map[string]int
-	fieldsIndexPlaylist map[string]int
-	fieldsIndexVideo    map[string]int
-	fieldsIndexCategory map[string]int
+	channelFields  map[string]int
+	playlistFields map[string]int
+	videoFields    map[string]int
+	categoryFields map[string]int
 }
 
 func NewPostgreVideoService(db *sql.DB, tubeCategory category.CategorySyncClient) (*PostgreVideoService, error) {
 	var resChannel []video.Channel
 	modelTypeChannel := reflect.TypeOf(resChannel).Elem()
-	fieldsIndexChannel, er1 := pgsql.GetColumnIndexes(modelTypeChannel)
+	channelFields, er1 := pgsql.GetColumnIndexes(modelTypeChannel)
 	if er1 != nil {
 		return nil, er1
 	}
 
 	var resPlaylist []video.Playlist
 	modelTypePlaylist := reflect.TypeOf(resPlaylist).Elem()
-	fieldsIndexPlaylist, er2 := pgsql.GetColumnIndexes(modelTypePlaylist)
+	playlistFields, er2 := pgsql.GetColumnIndexes(modelTypePlaylist)
 	if er2 != nil {
 		return nil, er2
 	}
 
 	var resCategory video.Categories
 	modelTypeCategory := reflect.TypeOf(resCategory)
-	fieldsIndexCategory, er3 := pgsql.GetColumnIndexes(modelTypeCategory)
+	categoryFields, er3 := pgsql.GetColumnIndexes(modelTypeCategory)
 	if er3 != nil {
 		return nil, er3
 	}
 
 	var resVideo []video.Video
 	modelTypeVideo := reflect.TypeOf(resVideo).Elem()
-	fieldsIndexVideo, er4 := pgsql.GetColumnIndexes(modelTypeVideo)
+	videoFields, er4 := pgsql.GetColumnIndexes(modelTypeVideo)
 	if er4 != nil {
 		return nil, er4
 	}
 
 	return &PostgreVideoService{
-		db:                  db,
-		tubeCategory:        tubeCategory,
-		fieldsIndexChannel:  fieldsIndexChannel,
-		fieldsIndexPlaylist: fieldsIndexPlaylist,
-		fieldsIndexVideo:    fieldsIndexVideo,
-		fieldsIndexCategory: fieldsIndexCategory,
+		db:             db,
+		tubeCategory:   tubeCategory,
+		channelFields:  channelFields,
+		playlistFields: playlistFields,
+		videoFields:    videoFields,
+		categoryFields: categoryFields,
 	}, nil
 }
 
@@ -117,7 +117,7 @@ func (s *PostgreVideoService) GetPlaylist(ctx context.Context, id string, fields
 	}
 	strq := fmt.Sprintf(`Select %s from playlist where id = $1`, strings.Join(fields, ","))
 	var res []video.Playlist
-	err := pgsql.QueryWithMap(ctx, s.db, s.fieldsIndexPlaylist, &res, strq, id)
+	err := pgsql.QueryWithMap(ctx, s.db, s.playlistFields, &res, strq, id)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ func (s *PostgreVideoService) GetPlaylists(ctx context.Context, ids []string, fi
 	}
 	strq := fmt.Sprintf(`Select %s from playlist where id in (%s)`, strings.Join(fields, ","), strings.Join(question, ","))
 	var res []video.Playlist
-	err := pgsql.QueryWithMap(ctx, s.db, s.fieldsIndexPlaylist, &res, strq, cc...)
+	err := pgsql.QueryWithMap(ctx, s.db, s.playlistFields, &res, strq, cc...)
 	if err != nil {
 		return nil, err
 	}
@@ -185,14 +185,13 @@ func (s *PostgreVideoService) GetVideos(ctx context.Context, ids []string, field
 }
 
 func (s *PostgreVideoService) GetChannelPlaylists(ctx context.Context, channelId string, max int, nextPageToken string, fields []string) (*video.ListResultPlaylist, error) {
-	fmt.Println("GetChannelPlaylists")
 	if len(fields) <= 0 {
 		fields = append(fields, "*")
 	}
 	next := getNext(nextPageToken)
 	strq := fmt.Sprintf(`select %s from playlist where channelId=$1 order by publishedAt desc limit %d offset %s`, strings.Join(fields, ","), max, next)
 	var res video.ListResultPlaylist
-	er1 := pgsql.QueryWithMap(ctx, s.db, s.fieldsIndexPlaylist, &res.List, strq, channelId)
+	er1 := pgsql.QueryWithMap(ctx, s.db, s.playlistFields, &res.List, strq, channelId)
 	if er1 != nil {
 		return nil, er1
 	}
@@ -216,7 +215,7 @@ func (s *PostgreVideoService) GetChannelVideos(ctx context.Context, channelId st
 	next := getNext(nextPageToken)
 	strq := fmt.Sprintf(`select %s from video where channelId=$1 order by publishedAt desc limit %d offset %s`, strings.Join(fields, ","), max, next)
 	var res video.ListResultVideos
-	er1 := pgsql.QueryWithMap(ctx, s.db, s.fieldsIndexVideo, &res.List, strq, channelId)
+	er1 := pgsql.QueryWithMap(ctx, s.db, s.videoFields, &res.List, strq, channelId)
 	if er1 != nil {
 		return nil, er1
 	}
@@ -233,7 +232,6 @@ func (s *PostgreVideoService) GetChannelVideos(ctx context.Context, channelId st
 }
 
 func (s *PostgreVideoService) GetPlaylistVideos(ctx context.Context, playlistId string, max int, nextPageToken string, fields []string) (*video.ListResultVideos, error) {
-	fmt.Println("GetPlaylistVideos")
 	strq1 := `select videos from playlistVideo where id = $1 `
 	var resVideoIds []string
 	er1 := pgsql.QueryWithMap(ctx, s.db, nil, &resVideoIds, strq1, playlistId)
@@ -252,7 +250,7 @@ func (s *PostgreVideoService) GetPlaylistVideos(ctx context.Context, playlistId 
 	next := getNext(nextPageToken)
 	strq2 := fmt.Sprintf(`select %s from video where id in (%s) order by publishedAt desc limit %d offset %s`, strings.Join(fields, ","), strings.Join(questions, ","), max, next)
 	var resVideos []video.Video
-	er2 := pgsql.QueryWithMap(ctx, s.db, s.fieldsIndexVideo, &resVideos, strq2, values...)
+	er2 := pgsql.QueryWithMap(ctx, s.db, s.videoFields, &resVideos, strq2, values...)
 	if er2 != nil {
 		return nil, er2
 	}
@@ -303,7 +301,7 @@ func (s *PostgreVideoService) SearchChannel(ctx context.Context, channelSM video
 	strq, statement := buildChannelQuery(channelSM, fields)
 	strq = strq + fmt.Sprintf(` limit %d offset %s`, max, next)
 	var resultChannel []video.Channel
-	err := pgsql.QueryWithMap(ctx, s.db, s.fieldsIndexChannel, &resultChannel, strq, statement...)
+	err := pgsql.QueryWithMap(ctx, s.db, s.channelFields, &resultChannel, strq, statement...)
 	if err != nil {
 		return nil, err
 	}
@@ -327,7 +325,7 @@ func (s *PostgreVideoService) SearchPlaylists(ctx context.Context, playlistSM vi
 	strq, statement := buildPlaylistQuery(playlistSM, fields)
 	strq = strq + fmt.Sprintf(` limit %d offset %s`, max, next)
 	var playlists []video.Playlist
-	err := pgsql.QueryWithMap(ctx, s.db, s.fieldsIndexPlaylist, &playlists, strq, statement...)
+	err := pgsql.QueryWithMap(ctx, s.db, s.playlistFields, &playlists, strq, statement...)
 	if err != nil {
 		return nil, err
 	}
@@ -352,7 +350,7 @@ func (s *PostgreVideoService) SearchVideos(ctx context.Context, itemSM video.Ite
 	strq, statement := buildVideoQuery(itemSM, fields)
 	strq = strq + fmt.Sprintf(` limit %d offset %s`, max, next)
 	var videos []video.Video
-	err := pgsql.QueryWithMap(ctx, s.db, s.fieldsIndexVideo, &videos, strq, statement...)
+	err := pgsql.QueryWithMap(ctx, s.db, s.videoFields, &videos, strq, statement...)
 	if err != nil {
 		return nil, err
 	}
@@ -376,7 +374,7 @@ func (s *PostgreVideoService) Search(ctx context.Context, itemSM video.ItemSM, m
 	strqChannel, statementChannel := buildSearchUnionQuery("channel", itemSM, fields)
 	var channels []video.Video
 	var resChannel video.ListResultVideos
-	er1 := pgsql.QueryWithMap(ctx, s.db, s.fieldsIndexVideo, &channels, strqChannel, statementChannel...)
+	er1 := pgsql.QueryWithMap(ctx, s.db, s.videoFields, &channels, strqChannel, statementChannel...)
 	if er1 != nil {
 		return nil, er1
 	}
@@ -387,7 +385,7 @@ func (s *PostgreVideoService) Search(ctx context.Context, itemSM video.ItemSM, m
 	strqPlaylist, statementPlaylist := buildSearchUnionQuery("playlist", itemSM, fields)
 	var playlists []video.Video
 	var resPlaylist video.ListResultVideos
-	er2 := pgsql.QueryWithMap(ctx, s.db, s.fieldsIndexVideo, &playlists, strqPlaylist, statementPlaylist...)
+	er2 := pgsql.QueryWithMap(ctx, s.db, s.videoFields, &playlists, strqPlaylist, statementPlaylist...)
 	if er2 != nil {
 		return nil, er2
 	}
@@ -398,7 +396,7 @@ func (s *PostgreVideoService) Search(ctx context.Context, itemSM video.ItemSM, m
 	strqVideo, statementVideo := buildSearchUnionQuery("video", itemSM, fields)
 	var videos []video.Video
 	var resVideo video.ListResultVideos
-	er3 := pgsql.QueryWithMap(ctx, s.db, s.fieldsIndexVideo, &videos, strqVideo, statementVideo...)
+	er3 := pgsql.QueryWithMap(ctx, s.db, s.videoFields, &videos, strqVideo, statementVideo...)
 	if er3 != nil {
 		return nil, er3
 	}
@@ -477,7 +475,7 @@ func (s *PostgreVideoService) GetPopularVideos(ctx context.Context, regionCode s
 	strq, statement := buildPopularVideoQuery(regionCode, categoryId, fields)
 	strq = strq + fmt.Sprintf(` limit %d offset %s`, limit, next)
 	var videos []video.Video
-	err := pgsql.QueryWithMap(ctx, s.db, s.fieldsIndexVideo, &videos, strq, statement...)
+	err := pgsql.QueryWithMap(ctx, s.db, s.videoFields, &videos, strq, statement...)
 	if err != nil {
 		return nil, err
 	}

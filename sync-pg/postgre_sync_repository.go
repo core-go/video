@@ -62,7 +62,6 @@ func NewPostgreVideoRepository(db *sql.DB) (*PostgreVideoRepository, error) {
 }
 
 func (s *PostgreVideoRepository) GetChannelSync(ctx context.Context, channelId string) (*video.ChannelSync, error) {
-	fmt.Println("GetChannelSync")
 	query := "select * from channelSync where id = $1 limit 1"
 	var channelSyncRes []video.ChannelSync
 	err := pgsql.QueryWithMap(ctx, s.DB, s.fieldsIndexChannelSync, &channelSyncRes, query, channelId)
@@ -77,7 +76,6 @@ func (s *PostgreVideoRepository) GetChannelSync(ctx context.Context, channelId s
 }
 
 func (s *PostgreVideoRepository) SaveChannel(ctx context.Context, channel video.Channel) (int64, error) {
-	fmt.Println("SaveChannel")
 	strq, args, err1 := pgsql.BuildToSaveWithArray("channel", channel, pgsql.DriverPostgres, pq.Array, s.channelSchema)
 	if err1 != nil {
 		return 0, err1
@@ -90,7 +88,6 @@ func (s *PostgreVideoRepository) SaveChannel(ctx context.Context, channel video.
 }
 
 func (s *PostgreVideoRepository) GetVideoIds(ctx context.Context, ids []string) ([]string, error) {
-	fmt.Println("GetVideoIds")
 	var question []string
 	var cc []interface{}
 	for i, v := range ids {
@@ -117,7 +114,6 @@ func (s *PostgreVideoRepository) GetVideoIds(ctx context.Context, ids []string) 
 }
 
 func (s *PostgreVideoRepository) SaveVideos(ctx context.Context, videos []video.Video) (int, error) {
-	fmt.Println("saveVideos")
 	statement, err0 := pgsql.BuildToSaveBatchWithArray("video", videos, pgsql.DriverPostgres, pq.Array, s.videoSchema)
 	if err0 != nil {
 		return 0, err0
@@ -132,7 +128,6 @@ func (s *PostgreVideoRepository) SaveVideos(ctx context.Context, videos []video.
 }
 
 func (s *PostgreVideoRepository) SavePlaylists(ctx context.Context, playlists []video.Playlist) (int, error) {
-	fmt.Println("SavePlaylists")
 	statement, err := pgsql.BuildToSaveBatchWithArray("playlist", playlists, pgsql.DriverPostgres, pq.Array, s.playlistSchema)
 	if err != nil {
 		return 0, err
@@ -147,7 +142,6 @@ func (s *PostgreVideoRepository) SavePlaylists(ctx context.Context, playlists []
 }
 
 func (s *PostgreVideoRepository) SavePlaylistVideos(ctx context.Context, playlistId string, videos []string) (int, error) {
-	fmt.Println("SavePlaylistVideos")
 	playlistVideos := video.PlaylistVideoIdVideos{
 		Id:     playlistId,
 		Videos: videos,
@@ -164,7 +158,6 @@ func (s *PostgreVideoRepository) SavePlaylistVideos(ctx context.Context, playlis
 }
 
 func (s *PostgreVideoRepository) SaveChannelSync(ctx context.Context, channel video.ChannelSync) (int, error) {
-	fmt.Println("SaveChannelSync")
 	strq, args, err1 := pgsql.BuildToSaveWithArray("channelSync", channel, pgsql.DriverPostgres, pq.Array, s.channelSyncSchema)
 	if err1 != nil {
 		return 0, err1
@@ -177,7 +170,6 @@ func (s *PostgreVideoRepository) SaveChannelSync(ctx context.Context, channel vi
 }
 
 func (s *PostgreVideoRepository) SavePlaylist(ctx context.Context, playlist video.Playlist) (int, error) {
-	fmt.Println("SavePlaylist")
 	statement, err0 := pgsql.BuildToSaveBatchWithArray("playlist", playlist, pgsql.DriverPostgres, pq.Array, s.playlistSchema)
 	if err0 != nil {
 		return 0, err0
