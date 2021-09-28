@@ -237,7 +237,7 @@ func (c *VideoHandler) GetVideosFromChannelIdOrPlaylistId(w http.ResponseWriter,
 
 func (c *VideoHandler) GetCategory(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)["params"]
-	res, err := c.Video.GetCagetories(r.Context(), params)
+	res, err := c.Video.GetCategories(r.Context(), params)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -461,7 +461,7 @@ func (c *VideoHandler) Search(w http.ResponseWriter, r *http.Request) {
 	}
 	itemSM.RegionCode = query.Get("regionCode")
 	log.Println(itemSM)
-	res, er1 := c.Video.SearchVideos(r.Context(), itemSM, limit, nextPageToken, fields)
+	res, er1 := c.Video.Search(r.Context(), itemSM, limit, nextPageToken, fields)
 	if er1 != nil {
 		http.Error(w, er1.Error(), http.StatusInternalServerError)
 		return

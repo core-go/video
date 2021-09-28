@@ -14,7 +14,7 @@ type VideoService interface {
 	GetChannelPlaylists(ctx context.Context, channelId string, max int, nextPageToken string, fields []string) (*ListResultPlaylist, error)
 	GetChannelVideos(ctx context.Context, channelId string, max int, nextPageToken string, fields []string) (*ListResultVideos, error)
 	GetPlaylistVideos(ctx context.Context, playlistId string, max int, nextPageToken string, fields []string) (*ListResultVideos, error)
-	GetCagetories(ctx context.Context, regionCode string) (*Categories, error)
+	GetCategories(ctx context.Context, regionCode string) (*Categories, error)
 	SearchChannel(ctx context.Context, channelSM ChannelSM, max int, nextPageToken string, fields []string) (*ListResultChannel, error)
 	SearchPlaylists(ctx context.Context, playlistSM PlaylistSM, max int, nextPageToken string, fields []string) (*ListResultPlaylist, error)
 	SearchVideos(ctx context.Context, itemSM ItemSM, max int, nextPageToken string, fields []string) (*ListResultVideos, error)
