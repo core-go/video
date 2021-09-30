@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	cassql "github.com/core-go/cassandra"
 	"github.com/core-go/video"
 	"github.com/core-go/video/category"
 	"github.com/gocql/gocql"
@@ -20,7 +21,10 @@ type CassandraVideoService struct {
 }
 
 func NewCassandraVideoService(cass *gocql.ClusterConfig, tubeCategory category.CategorySyncClient) *CassandraVideoService {
-	return &CassandraVideoService{cass: cass, tubeCategory: tubeCategory}
+	return &CassandraVideoService{
+		cass: cass,
+		tubeCategory: tubeCategory,
+	}
 }
 
 func (c *CassandraVideoService) GetChannel(ctx context.Context, channelId string, fields []string) (*video.Channel, error) {
@@ -32,23 +36,29 @@ func (c *CassandraVideoService) GetChannel(ctx context.Context, channelId string
 		fields = append(fields, "*")
 	}
 	query := fmt.Sprintf(`Select %s from channel where id = ?`, strings.Join(fields, ","))
-	q := session.Query(query, channelId)
-	if q.Exec() != nil {
-		return nil, q.Exec()
+	//q := session.Query(query, channelId)
+	//if q.Exec() != nil {
+	//	return nil, q.Exec()
+	//}
+	//q.Iter()
+	//res := channelConvert(q.Iter())
+	//if len(res) > 0 && len(res[0].ChannelList) > 0 {
+	//	channels,err := c.GetChannels(ctx, res[0].ChannelList, []string{})
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	res[0].Channels = *channels
+	//}
+	//if len(res) == 0 {
+	//	return nil, nil
+	//}
+	//return &res[0], nil
+	var channel []video.Channel
+	err := cassql.Query(session, &channel, query, channelId)
+	if err != nil {
+		return nil, err
 	}
-	q.Iter()
-	res := channelConvert(q.Iter())
-	if len(res) > 0 && len(res[0].ChannelList) > 0 {
-		channels,err := c.GetChannels(ctx, res[0].ChannelList, []string{})
-		if err != nil {
-			return nil, err
-		}
-		res[0].Channels = *channels
-	}
-	if len(res) == 0 {
-		return nil, nil
-	}
-	return &res[0], nil
+	return &channel[0], nil
 }
 
 func (c *CassandraVideoService) GetChannels(ctx context.Context, ids []string, fields []string) (*[]video.Channel, error) {
@@ -66,12 +76,18 @@ func (c *CassandraVideoService) GetChannels(ctx context.Context, ids []string, f
 		fields = append(fields, "*")
 	}
 	query := fmt.Sprintf(`Select %s from channel where id in (%s)`, strings.Join(fields, ","), strings.Join(question, ","))
-	q := session.Query(query, cc...)
-	if q.Exec() != nil {
-		return nil, q.Exec()
+	//q := session.Query(query, cc...)
+	//if q.Exec() != nil {
+	//	return nil, q.Exec()
+	//}
+	//res := channelConvert(q.Iter())
+	//return &res, nil
+	var channel []video.Channel
+	err := cassql.Query(session, &channel, query, cc...)
+	if err != nil {
+		return nil, err
 	}
-	res := channelConvert(q.Iter())
-	return &res, nil
+	return &channel, nil
 }
 
 func (c *CassandraVideoService) GetPlaylist(ctx context.Context, id string, fields []string) (*video.Playlist, error) {
@@ -83,15 +99,20 @@ func (c *CassandraVideoService) GetPlaylist(ctx context.Context, id string, fiel
 		fields = append(fields, "*")
 	}
 	query := fmt.Sprintf(`Select %s from playlist where id = ?`, strings.Join(fields, ","))
-	rows := session.Query(query, id)
-	if rows.Exec() != nil {
-		return nil, rows.Exec()
+	//rows := session.Query(query, id)
+	//if rows.Exec() != nil {
+	//	return nil, rows.Exec()
+	//}
+	//res := playlistConvert(rows.Iter())
+	//if len(res) == 0 {
+	//	return nil, nil
+	//}
+	var playlist []video.Playlist
+	err := cassql.Query(session, &playlist, query, id)
+	if err != nil {
+		return nil, err
 	}
-	res := playlistConvert(rows.Iter())
-	if len(res) == 0 {
-		return nil, nil
-	}
-	return &res[0], nil
+	return &playlist[0], nil
 }
 
 func (c *CassandraVideoService) GetPlaylists(ctx context.Context, ids []string, fields []string) (*[]video.Playlist, error) {
@@ -109,12 +130,17 @@ func (c *CassandraVideoService) GetPlaylists(ctx context.Context, ids []string, 
 		fields = append(fields, "*")
 	}
 	query := fmt.Sprintf(`Select %s from playlist where id in (%s)`, strings.Join(fields, ","), strings.Join(question, ","))
-	rows := session.Query(query, cc...)
-	if rows.Exec() != nil {
-		return nil, rows.Exec()
+	//rows := session.Query(query, cc...)
+	//if rows.Exec() != nil {
+	//	return nil, rows.Exec()
+	//}
+	//result := playlistConvert(rows.Iter())
+	var playlist []video.Playlist
+	err := cassql.Query(session, &playlist, query, cc...)
+	if err != nil {
+		return nil, err
 	}
-	result := playlistConvert(rows.Iter())
-	return &result, nil
+	return &playlist, nil
 }
 
 func (c *CassandraVideoService) GetVideo(ctx context.Context, id string, fields []string) (*video.Video, error) {
@@ -126,15 +152,21 @@ func (c *CassandraVideoService) GetVideo(ctx context.Context, id string, fields 
 		fields = append(fields, "*")
 	}
 	query := fmt.Sprintf(`Select %s from video where id = ?`, strings.Join(fields, ","))
-	rows := session.Query(query, id)
-	if rows.Exec() != nil {
-		return nil, rows.Exec()
+	//rows := session.Query(query, id)
+	//if rows.Exec() != nil {
+	//	return nil, rows.Exec()
+	//}
+	//res := videoConvert(rows.Iter())
+	//if len(res) == 0 {
+	//	return nil, nil
+	//}
+	//return &res[0], nil
+	var video []video.Video
+	err := cassql.Query(session, &video, query, id)
+	if err != nil {
+		return nil, err
 	}
-	res := videoConvert(rows.Iter())
-	if len(res) == 0 {
-		return nil, nil
-	}
-	return &res[0], nil
+	return &video[0], nil
 }
 
 func (c *CassandraVideoService) GetVideos(ctx context.Context, ids []string, fields []string) (*[]video.Video, error) {
@@ -152,12 +184,18 @@ func (c *CassandraVideoService) GetVideos(ctx context.Context, ids []string, fie
 		fields = append(fields, "*")
 	}
 	query := fmt.Sprintf(`Select %s from video where id in (%s)`, strings.Join(fields, ","), strings.Join(question, ","))
-	rows := session.Query(query, cc...)
-	if rows.Exec() != nil {
-		return nil, rows.Exec()
+	//rows := session.Query(query, cc...)
+	//if rows.Exec() != nil {
+	//	return nil, rows.Exec()
+	//}
+	//res := videoConvert(rows.Iter())
+	//return &res, nil
+	var video []video.Video
+	err := cassql.Query(session, &video, query, cc...)
+	if err != nil {
+		return nil, err
 	}
-	res := videoConvert(rows.Iter())
-	return &res, nil
+	return &video, nil
 }
 
 func (c *CassandraVideoService) GetChannelPlaylists(ctx context.Context, channelId string, max int, nextPageToken string, fields []string) (*video.ListResultPlaylist, error) {
@@ -165,36 +203,47 @@ func (c *CassandraVideoService) GetChannelPlaylists(ctx context.Context, channel
 	if er0 != nil {
 		return nil, er0
 	}
-	sort := map[string]interface{}{"field": `publishedat`, "reverse": true}
-	must := map[string]interface{}{"type": "match", "field": "channelid", "value": fmt.Sprintf(`%s`, channelId)}
-	a := map[string]interface{}{
-		"filter": map[string]interface{}{
-			"must": must,
-		},
-		"sort": sort,
-	}
-	queryObj, err := json.Marshal(a)
-	if err != nil {
-		return nil, err
-	}
+	//sort := map[string]interface{}{"field": `publishedat`, "reverse": true}
+	//must := map[string]interface{}{"type": "match", "field": "channelid", "value": fmt.Sprintf(`%s`, channelId)}
+	//a := map[string]interface{}{
+	//	"filter": map[string]interface{}{
+	//		"must": must,
+	//	},
+	//	"sort": sort,
+	//}
+	//queryObj, err := json.Marshal(a)
+	//if err != nil {
+	//	return nil, err
+	//}
 	if len(fields) <= 0 {
 		fields = append(fields, "*")
 	}
-	sql := fmt.Sprintf(`select %s from playlist where expr(playlist_index, '%s')`, strings.Join(fields, ","), queryObj)
-	var query *gocql.Query
-	next, err := hex.DecodeString(nextPageToken)
+	//sql := fmt.Sprintf(`select %s from playlist where expr(playlist_index, '%s')`, strings.Join(fields, ","), queryObj)
+	sql := fmt.Sprintf(`select %s from playlist where channelid = ? limit %d ALLOW FILTERING`, strings.Join(fields, ","), max)
+	//var query *gocql.Query
+	//next, er1 := hex.DecodeString(nextPageToken)
+	//if er1 != nil {
+	//	return nil, er1
+	//}
+	//query = session.Query(sql).PageState(next).PageSize(max)
+	//if query.Exec() != nil {
+	//	return nil, query.Exec()
+	//}
+	//iter := query.Iter()
+	//var res video.ListResultPlaylist
+	//res.NextPageToken = hex.EncodeToString(iter.PageState())
+	//res.List = playlistConvert(iter)
+	//return &res, nil
+	var listResultPlaylist video.ListResultPlaylist
+	err := cassql.Query(session, &listResultPlaylist.List, sql, channelId)
 	if err != nil {
 		return nil, err
 	}
-	query = session.Query(sql).PageState(next).PageSize(max)
-	if query.Exec() != nil {
-		return nil, query.Exec()
+	listResultPlaylist.Total = len(listResultPlaylist.List)
+	if listResultPlaylist.Total > 0 {
+		listResultPlaylist.Limit = max
 	}
-	iter := query.Iter()
-	var res video.ListResultPlaylist
-	res.NextPageToken = hex.EncodeToString(iter.PageState())
-	res.List = playlistConvert(iter)
-	return &res, nil
+	return &listResultPlaylist, nil
 }
 
 func (c *CassandraVideoService) GetChannelVideos(ctx context.Context, channelId string, max int, nextPageToken string, fields []string) (*video.ListResultVideos, error) {
@@ -202,36 +251,44 @@ func (c *CassandraVideoService) GetChannelVideos(ctx context.Context, channelId 
 	if er0 != nil {
 		return nil, er0
 	}
-	sort := map[string]interface{}{"field": `publishedat`, "reverse": true}
-	must := map[string]interface{}{"type": "match", "field": "channelid", "value": fmt.Sprintf(`%s`, channelId)}
-	a := map[string]interface{}{
-		"filter": map[string]interface{}{
-			"must": must,
-		},
-		"sort": sort,
-	}
+	//sort := map[string]interface{}{"field": `publishedat`, "reverse": true}
+	//must := map[string]interface{}{"type": "match", "field": "channelid", "value": fmt.Sprintf(`%s`, channelId)}
+	//a := map[string]interface{}{
+	//	"filter": map[string]interface{}{
+	//		"must": must,
+	//	},
+	//	"sort": sort,
+	//}
 	if len(fields) <= 0 {
 		fields = append(fields, "*")
 	}
-	queryObj, err := json.Marshal(a)
+	//queryObj, err := json.Marshal(a)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//sql := fmt.Sprintf(`select %s from video where expr(video_index, '%s')`, strings.Join(fields, ","), queryObj)
+	//var query *gocql.Query
+	//next, err := hex.DecodeString(nextPageToken)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//query = session.Query(sql).PageState(next).PageSize(max)
+	//if query.Exec() != nil {
+	//	return nil, query.Exec()
+	//}
+	//iter := query.Iter()
+
+	sql := fmt.Sprintf(`select %s from video where channelid = ? limit %d ALLOW FILTERING`, strings.Join(fields, ","), max)
+	var resList video.ListResultVideos
+	err := cassql.Query(session, &resList.List, sql, channelId)
 	if err != nil {
 		return nil, err
 	}
-	sql := fmt.Sprintf(`select %s from video where expr(video_index, '%s')`, strings.Join(fields, ","), queryObj)
-	var query *gocql.Query
-	next, err := hex.DecodeString(nextPageToken)
-	if err != nil {
-		return nil, err
+	resList.Total = len(resList.List)
+	if resList.Total > 0 {
+		resList.Limit = max
 	}
-	query = session.Query(sql).PageState(next).PageSize(max)
-	if query.Exec() != nil {
-		return nil, query.Exec()
-	}
-	iter := query.Iter()
-	var res video.ListResultVideos
-	res.NextPageToken = hex.EncodeToString(iter.PageState())
-	res.List = videoConvert(iter)
-	return &res, nil
+	return &resList, nil
 }
 
 func (c *CassandraVideoService) GetPlaylistVideos(ctx context.Context, playlistId string, max int, nextPageToken string, fields []string) (*video.ListResultVideos, error) {
@@ -239,50 +296,67 @@ func (c *CassandraVideoService) GetPlaylistVideos(ctx context.Context, playlistI
 	if er0 != nil {
 		return nil, er0
 	}
-	const sql = `select videos from playlistVideo where id = ? `
-	query := session.Query(sql, playlistId)
-	if query.Exec() != nil {
-		return nil, query.Exec()
+	var sql = `select * from playlistVideo where id = ?`
+	//query := session.Query(sql, playlistId)
+	//if query.Exec() != nil {
+	//	return nil, query.Exec()
+	//}
+	var ids []video.PlaylistVideoIdVideos
+	er1 := cassql.Query(session, &ids, sql, playlistId)
+	if er1 != nil {
+		return nil, er1
 	}
-	var ids []string
-	query.Iter().Scan(&ids)
-	question := make([]string, len(ids))
-	cc := make([]interface{}, len(ids))
-	for i, v := range ids {
+	//query.Iter().Scan(&ids)
+
+	question := make([]string, len(ids[0].Videos))
+	cc := make([]interface{}, len(ids[0].Videos))
+	for i, v := range ids[0].Videos {
 		question[i] = "?"
 		cc[i] = v
 	}
 	if len(fields) <= 0 {
 		fields = append(fields, "*")
 	}
-	next, err := hex.DecodeString(nextPageToken)
-	if err != nil {
-		return nil, err
-	}
-	queryV := fmt.Sprintf(`Select %s from video where id in (%s)`, strings.Join(fields, ","), strings.Join(question, ","))
-	rows := session.Query(queryV, cc...).PageState(next).PageSize(max)
-	if rows.Exec() != nil {
-		return nil, rows.Exec()
-	}
+	//next, err := hex.DecodeString(nextPageToken)
+	//if err != nil {
+	//	return nil, err
+	//}
+	queryV := fmt.Sprintf(`Select %s from video where id in (%s) limit %d`, strings.Join(fields, ","), strings.Join(question, ","), max)
 	var res video.ListResultVideos
-	res.List = videoConvert(rows.Iter())
-	res.NextPageToken = hex.EncodeToString(rows.Iter().PageState())
+	er2 := cassql.Query(session, &res.List, queryV, cc...)
+	if er2 != nil {
+		return nil, er2
+	}
+	//rows := session.Query(queryV, cc...).PageState(next).PageSize(max)
+	//if rows.Exec() != nil {
+	//	return nil, rows.Exec()
+	//}
+	res.Total = len(res.List)
+	if res.Total > 0 {
+		res.Limit = max
+	}
 	return &res, nil
 }
 
-func (c *CassandraVideoService) GetCagetories(ctx context.Context, regionCode string) (*video.Categories, error) {
+func (c *CassandraVideoService) GetCategories(ctx context.Context, regionCode string) (*video.Categories, error) {
 	session, er0 := c.cass.CreateSession()
 	if er0 != nil {
 		return nil, er0
 	}
 	sql := `select * from category where id = ?`
-	query := session.Query(sql, regionCode)
-	if query.Exec() != nil {
-		return nil, query.Exec()
+	//query := session.Query(sql, regionCode)
+	//if query.Exec() != nil {
+	//	return nil, query.Exec()
+	//}
+	//var category video.Categories
+	//query.Iter().Scan(&category.Id, &category.Data)
+	var categories []video.Categories
+	err := cassql.Query(session, &categories, sql, regionCode)
+	if err != nil {
+		return nil, err
 	}
-	var category video.Categories
-	query.Iter().Scan(&category.Id, &category.Data)
-	if category.Data == nil {
+	//if category.Data == nil {
+	if len(categories) == 0 {
 		res, er1 := c.tubeCategory.GetCagetories(regionCode)
 		if er1 != nil {
 			return nil, er1
@@ -298,7 +372,7 @@ func (c *CassandraVideoService) GetCagetories(ctx context.Context, regionCode st
 		}
 		return &result, nil
 	}
-	return &category, nil
+	return &categories[0], nil
 }
 
 func (c *CassandraVideoService) SearchChannel(ctx context.Context, channelSM video.ChannelSM, max int, nextPageToken string, fields []string) (*video.ListResultChannel, error) {
@@ -310,17 +384,28 @@ func (c *CassandraVideoService) SearchChannel(ctx context.Context, channelSM vid
 	if er1 != nil {
 		return nil, er1
 	}
-	next, err := hex.DecodeString(nextPageToken)
+	sql = sql + fmt.Sprintf(` limit %d`, max)
+	//next, err := hex.DecodeString(nextPageToken)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//query := session.Query(sql).PageState(next).PageSize(max)
+	//if query.Exec() != nil {
+	//	return nil, query.Exec()
+	//}
+	var resChannel []video.Channel
+	var res video.ListResultChannel
+	err := cassql.Query(session, &resChannel, sql)
 	if err != nil {
 		return nil, err
 	}
-	query := session.Query(sql).PageState(next).PageSize(max)
-	if query.Exec() != nil {
-		return nil, query.Exec()
+	res.List = resChannel
+	res.Total = len(resChannel)
+	if res.Total > 0 {
+		res.Limit = max
 	}
-	var res video.ListResultChannel
-	res.List = channelConvert(query.Iter())
-	res.NextPageToken = hex.EncodeToString(query.Iter().PageState())
+	//res.List = channelConvert(query.Iter())
+	//res.NextPageToken = hex.EncodeToString(query.Iter().PageState())
 	return &res, nil
 }
 
@@ -333,17 +418,28 @@ func (c *CassandraVideoService) SearchPlaylists(ctx context.Context, playlistSM 
 	if er1 != nil {
 		return nil, er1
 	}
-	next, err := hex.DecodeString(nextPageToken)
+	sql = sql + fmt.Sprintf(` limit %d`, max)
+	//next, err := hex.DecodeString(nextPageToken)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//query := session.Query(sql).PageState(next).PageSize(max)
+	//if query.Exec() != nil {
+	//	return nil, query.Exec()
+	//}
+	var res video.ListResultPlaylist
+	var resPlaylist []video.Playlist
+	err := cassql.Query(session, &resPlaylist, sql)
 	if err != nil {
 		return nil, err
 	}
-	query := session.Query(sql).PageState(next).PageSize(max)
-	if query.Exec() != nil {
-		return nil, query.Exec()
+	res.List = resPlaylist
+	res.Total = len(resPlaylist)
+	if res.Total > 0 {
+		res.Limit = max
 	}
-	var res video.ListResultPlaylist
-	res.List = playlistConvert(query.Iter())
-	res.NextPageToken = hex.EncodeToString(query.Iter().PageState())
+	//res.List = playlistConvert(query.Iter())
+	//res.NextPageToken = hex.EncodeToString(query.Iter().PageState())
 	return &res, nil
 }
 
@@ -356,17 +452,28 @@ func (c *CassandraVideoService) SearchVideos(ctx context.Context, itemSM video.I
 	if er1 != nil {
 		return nil, er1
 	}
-	next, err := hex.DecodeString(nextPageToken)
+	sql = sql + fmt.Sprintf(` limit %d`, max)
+	//next, err := hex.DecodeString(nextPageToken)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//query := session.Query(sql).PageState(next).PageSize(max)
+	//if query.Exec() != nil {
+	//	return nil, query.Exec()
+	//}
+	var res video.ListResultVideos
+	var resVideo []video.Video
+	err := cassql.Query(session, &resVideo, sql)
 	if err != nil {
 		return nil, err
 	}
-	query := session.Query(sql).PageState(next).PageSize(max)
-	if query.Exec() != nil {
-		return nil, query.Exec()
+	res.List = resVideo
+	res.Total = len(resVideo)
+	if res.Total > 0 {
+		res.Limit = max
 	}
-	var res video.ListResultVideos
-	res.List = videoConvert(query.Iter())
-	res.NextPageToken = hex.EncodeToString(query.Iter().PageState())
+	//res.List = videoConvert(query.Iter())
+	//res.NextPageToken = hex.EncodeToString(query.Iter().PageState())
 	return &res, nil
 }
 
@@ -717,6 +824,9 @@ func buildVideosSearch(s video.ItemSM, fields []string) (string, error) {
 	if len(s.RegionCode) > 0 {
 		not = append(not, map[string]interface{}{"type": "match", "field": "blockedregions", "value": s.RegionCode})
 	}
+	if len(s.ChannelId) > 0 {
+		must = append(must, map[string]interface{}{"type": "match", "field": "channelid", "value": s.ChannelId})
+	}
 	if len(s.Sort) > 0 {
 		sort = append(sort, map[string]interface{}{"field": strings.ToLower(s.Sort), "reverse": true})
 		fields = checkFields(s.Sort, fields)
@@ -754,7 +864,7 @@ func buildVideosSearch(s video.ItemSM, fields []string) (string, error) {
 		fields = append(fields, "*")
 	}
 	sql := fmt.Sprintf(`select %s from video where expr(video_index,'%s')`, strings.Join(fields, ","), queryObj)
-	log.Println(sql)
+	fmt.Println("buildVideoSearch: ", sql)
 	return sql, nil
 }
 
