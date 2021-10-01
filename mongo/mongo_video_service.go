@@ -303,7 +303,7 @@ func (m *MongoVideoService) GetPlaylistVideos(ctx context.Context, playlistId st
 	return &result, nil
 }
 
-func (m *MongoVideoService) GetCagetories(ctx context.Context, regionCode string) (*video.Categories, error) {
+func (m *MongoVideoService) GetCategories(ctx context.Context, regionCode string) (*video.Categories, error) {
 	query := bson.M{"_id": regionCode}
 	res := m.CategoryCollection.FindOne(ctx, query)
 	var category video.Categories

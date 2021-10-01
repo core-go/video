@@ -2,9 +2,14 @@ package video
 
 import (
 	"encoding/json"
+
 	"github.com/gorilla/mux"
+
+	//"github.com/core-go/sql"
+	"errors"
 	"log"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -12,10 +17,33 @@ import (
 
 type VideoHandler struct {
 	Video VideoService
+	channelType reflect.Type
+	playlistType reflect.Type
+	videoType reflect.Type
 }
 
-func NewVideoHandler(clientService VideoService) *VideoHandler {
-	return &VideoHandler{Video: clientService}
+func NewVideoHandler(clientService VideoService) (*VideoHandler,error) {
+	var channel Channel
+	channelType := reflect.TypeOf(channel)
+	if channelType.Kind() != reflect.Struct {
+		return nil, errors.New("bad type")
+	}
+	var playlist Playlist
+	playlistType := reflect.TypeOf(playlist)
+	if playlistType.Kind() != reflect.Struct {
+		return nil, errors.New("bad type")
+	}
+	var video Video
+	videoType := reflect.TypeOf(video)
+	if videoType.Kind() != reflect.Struct {
+		return nil, errors.New("bad type")
+	}
+	return &VideoHandler{
+		Video: clientService,
+		channelType: channelType,
+		playlistType: playlistType,
+		videoType: videoType,
+	}, nil
 }
 
 func (c *VideoHandler) GetChannel(w http.ResponseWriter, r *http.Request) {
@@ -29,6 +57,7 @@ func (c *VideoHandler) GetChannel(w http.ResponseWriter, r *http.Request) {
 	if len(s) > 1 && len(s[1]) > 0 {
 		fields = strings.Split(s[1], ",")
 	}
+	fields = checkFields(c.channelType, fields)
 	res, err := c.Video.GetChannel(r.Context(), s[0], fields)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -49,6 +78,7 @@ func (c *VideoHandler) GetChannels(w http.ResponseWriter, r *http.Request) {
 	if len(s) > 1 && len(s[1]) > 0 {
 		fields = strings.Split(s[1], ",")
 	}
+	fields = checkFields(c.channelType, fields)
 	res, err := c.Video.GetChannels(r.Context(), arrayId, fields)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -68,6 +98,7 @@ func (c *VideoHandler) GetPlaylist(w http.ResponseWriter, r *http.Request) {
 	if len(s) > 1 && len(s[1]) > 0 {
 		fields = strings.Split(s[1], ",")
 	}
+	fields = checkFields(c.playlistType, fields)
 	res, err := c.Video.GetPlaylist(r.Context(), s[0], fields)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -88,6 +119,7 @@ func (c *VideoHandler) GetPlaylists(w http.ResponseWriter, r *http.Request) {
 	if len(s) > 1 && len(s[1]) > 0 {
 		fields = strings.Split(s[1], ",")
 	}
+	fields = checkFields(c.playlistType, fields)
 	res, err := c.Video.GetPlaylists(r.Context(), ids, fields)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -106,6 +138,7 @@ func (c *VideoHandler) GetVideo(w http.ResponseWriter, r *http.Request) {
 	if len(s) > 1 && len(s[1]) > 0 {
 		fields = strings.Split(s[1], ",")
 	}
+	fields = checkFields(c.videoType, fields)
 	res, err := c.Video.GetVideo(r.Context(), s[0], fields)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -126,6 +159,7 @@ func (c *VideoHandler) GetVideos(w http.ResponseWriter, r *http.Request) {
 	if len(s) > 1 && len(s[1]) > 0 {
 		fields = strings.Split(s[1], ",")
 	}
+	fields = checkFields(c.videoType, fields)
 	res, err := c.Video.GetVideos(r.Context(), ids, fields)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -161,6 +195,7 @@ func (c *VideoHandler) GetChannelPlaylists(w http.ResponseWriter, r *http.Reques
 	if len(fieldsString) > 0 {
 		fields = strings.Split(fieldsString, ",")
 	}
+	fields = checkFields(c.playlistType, fields)
 	res, er1 := c.Video.GetChannelPlaylists(r.Context(), channelId, limit, nextPageToken, fields)
 	if er1 != nil {
 		http.Error(w, er1.Error(), http.StatusInternalServerError)
@@ -193,6 +228,7 @@ func (c *VideoHandler) GetVideosFromChannelIdOrPlaylistId(w http.ResponseWriter,
 		if len(fieldsString) > 0 {
 			fields = strings.Split(fieldsString, ",")
 		}
+		fields = checkFields(c.videoType, fields)
 		res, er1 := c.Video.GetPlaylistVideos(r.Context(), playlistId, limit, nextPageToken, fields)
 		if er1 != nil {
 			http.Error(w, er1.Error(), http.StatusInternalServerError)
@@ -225,7 +261,7 @@ func (c *VideoHandler) GetVideosFromChannelIdOrPlaylistId(w http.ResponseWriter,
 		if len(fieldsString) > 0 {
 			fields = strings.Split(fieldsString, ",")
 		}
-		log.Println(channelId, limit, nextPageToken, fields)
+		fields = checkFields(c.videoType, fields)
 		res, er1 := c.Video.GetChannelVideos(r.Context(), channelId, limit, nextPageToken, fields)
 		if er1 != nil {
 			http.Error(w, er1.Error(), http.StatusInternalServerError)
@@ -267,6 +303,7 @@ func (c *VideoHandler) SearchChannel(w http.ResponseWriter, r *http.Request) {
 	if len(fieldsString) > 0 {
 		fields = strings.Split(fieldsString, ",")
 	}
+	fields = checkFields(c.channelType, fields)
 	var channelSM ChannelSM
 	channelSM.Q = strings.TrimSpace(query.Get("q"))
 	channelSM.ChannelId = strings.TrimSpace(query.Get("channelId"))
@@ -281,7 +318,7 @@ func (c *VideoHandler) SearchChannel(w http.ResponseWriter, r *http.Request) {
 		channelSM.PublishedAfter = &t
 	}
 
-	if query.Get("publishedAfter") != "" {
+	if query.Get("publishedBefore") != "" {
 		t1, err := time.Parse(layout, query.Get("publishedBefore"))
 		if err != nil {
 			http.Error(w, "publishedBefore is not time", http.StatusBadRequest)
@@ -322,6 +359,7 @@ func (c *VideoHandler) SearchPlaylists(w http.ResponseWriter, r *http.Request) {
 	if len(fieldsString) > 0 {
 		fields = strings.Split(fieldsString, ",")
 	}
+	fields = checkFields(c.playlistType, fields)
 	var playlistSM PlaylistSM
 	playlistSM.Q = strings.TrimSpace(query.Get("q"))
 	playlistSM.ChannelId = strings.TrimSpace(query.Get("channelId"))
@@ -336,7 +374,7 @@ func (c *VideoHandler) SearchPlaylists(w http.ResponseWriter, r *http.Request) {
 		playlistSM.PublishedAfter = &t
 	}
 
-	if query.Get("publishedAfter") != "" {
+	if query.Get("publishedBefore") != "" {
 		t1, err := time.Parse(layout, query.Get("publishedBefore"))
 		if err != nil {
 			http.Error(w, "publishedBefore is not time", http.StatusBadRequest)
@@ -346,7 +384,6 @@ func (c *VideoHandler) SearchPlaylists(w http.ResponseWriter, r *http.Request) {
 	}
 
 	playlistSM.RegionCode = query.Get("regionCode")
-	log.Println(playlistSM)
 	res, er1 := c.Video.SearchPlaylists(r.Context(), playlistSM, limit, nextPageToken, fields)
 	if er1 != nil {
 		http.Error(w, er1.Error(), http.StatusInternalServerError)
@@ -377,6 +414,7 @@ func (c *VideoHandler) SearchVideos(w http.ResponseWriter, r *http.Request) {
 	if len(fieldsString) > 0 {
 		fields = strings.Split(fieldsString, ",")
 	}
+	fields = checkFields(c.videoType, fields)
 	var itemSM ItemSM
 	itemSM.Q = strings.TrimSpace(query.Get("q"))
 	itemSM.ChannelId = strings.TrimSpace(query.Get("channelId"))
@@ -391,7 +429,7 @@ func (c *VideoHandler) SearchVideos(w http.ResponseWriter, r *http.Request) {
 		itemSM.PublishedAfter = &t
 	}
 
-	if query.Get("publishedAfter") != "" {
+	if query.Get("publishedBefore") != "" {
 		t1, err := time.Parse(layout, query.Get("publishedBefore"))
 		if err != nil {
 			http.Error(w, "publishedBefore is not time", http.StatusBadRequest)
@@ -434,6 +472,7 @@ func (c *VideoHandler) Search(w http.ResponseWriter, r *http.Request) {
 	if len(fieldsString) > 0 {
 		fields = strings.Split(fieldsString, ",")
 	}
+	fields = checkFields(c.videoType,fields)
 	var itemSM ItemSM
 	itemSM.Q = strings.TrimSpace(query.Get("q"))
 	itemSM.ChannelId = strings.TrimSpace(query.Get("channelId"))
@@ -448,7 +487,7 @@ func (c *VideoHandler) Search(w http.ResponseWriter, r *http.Request) {
 		itemSM.PublishedAfter = &t
 	}
 
-	if query.Get("publishedAfter") != "" {
+	if query.Get("publishedBefore") != "" {
 		t1, err := time.Parse(layout, query.Get("publishedBefore"))
 		if err != nil {
 			http.Error(w, "publishedBefore is not time", http.StatusBadRequest)
@@ -460,7 +499,6 @@ func (c *VideoHandler) Search(w http.ResponseWriter, r *http.Request) {
 		itemSM.Duration = query.Get("duration")
 	}
 	itemSM.RegionCode = query.Get("regionCode")
-	log.Println(itemSM)
 	res, er1 := c.Video.Search(r.Context(), itemSM, limit, nextPageToken, fields)
 	if er1 != nil {
 		http.Error(w, er1.Error(), http.StatusInternalServerError)
@@ -495,6 +533,7 @@ func (c *VideoHandler) GetRelatedVideos(w http.ResponseWriter, r *http.Request) 
 	if len(fieldsString) > 0 {
 		fields = strings.Split(fieldsString, ",")
 	}
+	fields = checkFields(c.videoType, fields)
 	res, err := c.Video.GetRelatedVideos(r.Context(), id, limit, nextPageToken, fields)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -528,6 +567,7 @@ func (c *VideoHandler) GetPopularVideos(w http.ResponseWriter, r *http.Request) 
 	if len(fieldsString) > 0 {
 		fields = strings.Split(fieldsString, ",")
 	}
+	fields = checkFields(c.videoType, fields)
 	res, err := c.Video.GetPopularVideos(r.Context(), regionCode, categoryId, limit, nextPageToken, fields)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -536,6 +576,22 @@ func (c *VideoHandler) GetPopularVideos(w http.ResponseWriter, r *http.Request) 
 	respond(w, res)
 }
 
+func checkFields(modelType reflect.Type, fields []string) (res []string) {
+	for i := 0; i < modelType.NumField(); i++ {
+		field := modelType.Field(i)
+		ormTag := field.Tag.Get("json")
+		jsonField := strings.Split(ormTag, ",")[0]
+		if len(ormTag) > 0 {
+			for _, field := range fields {
+				if strings.TrimSpace(field) == jsonField {
+					res = append(res, jsonField)
+					break
+				}
+			}
+		}
+	}
+	return res
+}
 
 func respond(w http.ResponseWriter, result interface{}) {
 	response, _ := json.Marshal(result)

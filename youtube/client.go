@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"log"
 )
 
 type YoutubeSyncClient struct {
@@ -186,6 +187,7 @@ func convertChannel(url string) (*[]Channel, error) {
 	}
 	channel := make([]Channel, len(summary.Items))
 	for i, v := range summary.Items {
+		log.Println(v)
 		channel[i].Id = v.Id
 		channel[i].Title = v.Snippet.Title
 		channel[i].Description = v.Snippet.Description
