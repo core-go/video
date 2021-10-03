@@ -1,8 +1,6 @@
 package video
 
-import (
-	"context"
-)
+import "context"
 
 type SyncRepository interface {
 	GetChannelSync(ctx context.Context, channelId string) (*ChannelSync, error)

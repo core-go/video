@@ -2,10 +2,11 @@ package sync
 
 import (
 	"context"
-	"github.com/core-go/video"
-	"github.com/core-go/video/youtube"
 	"sync"
 	"time"
+
+	"github.com/core-go/video"
+	"github.com/core-go/video/youtube"
 )
 
 type DefaultSyncService struct {
@@ -53,7 +54,7 @@ func (d *DefaultSyncService) SyncPlaylist(ctx context.Context, playlistId string
 	return syncPlaylist(ctx, playlistId, syncVideos, d)
 }
 
-func (d *DefaultSyncService) SyncPlaylists(ctx context.Context, playlistIds []string,level int) (int,error) {
+func (d *DefaultSyncService) SyncPlaylists(ctx context.Context, playlistIds []string, level int) (int, error) {
 	var wg sync.WaitGroup
 	var errSync error
 	tam := 0
@@ -76,7 +77,7 @@ func (d *DefaultSyncService) SyncPlaylists(ctx context.Context, playlistIds []st
 }
 
 func (d *DefaultSyncService) GetSubscriptions(ctx context.Context, channelId string) ([]video.Channel, error) {
-	channels := []video.Channel{}
+	var channels []video.Channel
 	nextPageToken := ""
 	flag := true
 	mine := ""
@@ -95,13 +96,13 @@ func (d *DefaultSyncService) GetSubscriptions(ctx context.Context, channelId str
 }
 
 func syncChannel(ctx context.Context, d *DefaultSyncService, channelId string) (int, error) {
-	ChannelSync := make(chan *video.ChannelSync)
+	channelSync := make(chan *video.ChannelSync)
 	errChannelSync := make(chan error)
 	Channel := make(chan *video.Channel)
 	errChannel := make(chan error)
 	go func() {
 		result, err := d.Repository.GetChannelSync(ctx, channelId)
-		ChannelSync <- result
+		channelSync <- result
 		errChannelSync <- err
 	}()
 	go func() {
@@ -109,7 +110,7 @@ func syncChannel(ctx context.Context, d *DefaultSyncService, channelId string) (
 		Channel <- result
 		errChannel <- err
 	}()
-	resultChannelSync := <-ChannelSync
+	resultChannelSync := <-channelSync
 	resultChannel := <-Channel
 	er0 := <-errChannelSync
 	er1 := <-errChannel

@@ -2,12 +2,12 @@ package test
 
 import (
 	"encoding/json"
-	. "github.com/core-go/video"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
+	. "github.com/core-go/video"
 	"github.com/gorilla/mux"
 )
 

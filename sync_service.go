@@ -1,8 +1,6 @@
 package video
 
-import (
-	"context"
-)
+import "context"
 
 type SyncService interface {
 	SyncChannel(ctx context.Context, channelId string) (int, error)

@@ -3,9 +3,10 @@ package sync
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	. "github.com/core-go/video"
 	"github.com/gorilla/mux"
-	"net/http"
 )
 
 type SyncHandler struct {

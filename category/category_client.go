@@ -3,9 +3,10 @@ package category
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/core-go/video"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/core-go/video"
 )
 
 type CategorySyncClient struct {

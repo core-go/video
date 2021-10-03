@@ -3,13 +3,14 @@ package mongo
 import (
 	"context"
 	"fmt"
-	. "github.com/core-go/video"
 	"reflect"
 	"strings"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	. "github.com/core-go/video"
 )
 
 type Id struct {
@@ -117,7 +118,7 @@ func (m *MongoVideoRepository) SaveVideos(ctx context.Context, videos []Video) (
 		if err != nil {
 			errMsg := err.Error()
 			if strings.Contains(errMsg, "duplicate key error collection:") {
-				res, er0 := UpsertMany(ctx, m.VideoCollection, arr, "Id")
+				res, er0 := SaveMany(ctx, m.VideoCollection, arr, "Id")
 				if er0 != nil {
 					return 0, er0
 				}
@@ -146,7 +147,7 @@ func (m *MongoVideoRepository) SavePlaylists(ctx context.Context, playlist []Pla
 		if err != nil {
 			errMsg := err.Error()
 			if strings.Contains(errMsg, "duplicate key error collection:") {
-				res, er0 := UpsertMany(ctx, m.PlaylistCollection, playlist, "Id")
+				res, er0 := SaveMany(ctx, m.PlaylistCollection, playlist, "Id")
 				if er0 != nil {
 					return 0, er0
 				}
@@ -242,7 +243,7 @@ func (m *MongoVideoRepository) SavePlaylist(ctx context.Context, playlist Playli
 	return 1, nil
 }
 
-func UpsertMany(ctx context.Context, collection *mongo.Collection, model interface{}, idName string) (*mongo.BulkWriteResult, error) { //Patch
+func SaveMany(ctx context.Context, collection *mongo.Collection, model interface{}, idName string) (*mongo.BulkWriteResult, error) { //Patch
 	models := make([]mongo.WriteModel, 0)
 	switch reflect.TypeOf(model).Kind() {
 	case reflect.Slice:

@@ -1,8 +1,6 @@
 package video
 
-import (
-	"context"
-)
+import "context"
 
 type VideoService interface {
 	GetChannel(ctx context.Context, channelId string, fields []string) (*Channel, error)

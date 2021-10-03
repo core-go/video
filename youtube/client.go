@@ -3,13 +3,14 @@ package youtube
 import (
 	"encoding/json"
 	"fmt"
-	. "github.com/core-go/video"
 	"io/ioutil"
+	"log"
 	"math"
 	"net/http"
 	"strconv"
 	"strings"
-	"log"
+
+	. "github.com/core-go/video"
 )
 
 type YoutubeSyncClient struct {

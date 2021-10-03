@@ -4,15 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/core-go/video"
-	"github.com/core-go/video/category"
+	"log"
+	"strconv"
+	"strings"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
-	"strconv"
-	"strings"
+
+	"github.com/core-go/video"
+	"github.com/core-go/video/category"
 )
 
 type MongoVideoService struct {
@@ -21,8 +23,8 @@ type MongoVideoService struct {
 	PlaylistCollection      *mongo.Collection
 	PlaylistVideoCollection *mongo.Collection
 	VideoCollection         *mongo.Collection
-	CategoryCollection *mongo.Collection
-	TubeCategory       category.CategorySyncClient
+	CategoryCollection      *mongo.Collection
+	TubeCategory            category.CategorySyncClient
 }
 
 func NewMongoVideoService(db *mongo.Database, channelCollectionName string, channelSyncCollectionName string, playlistCollectionName string, playlistVideoCollectionName string, videoCollectionName string, categoryCollection string, TubeCategory category.CategorySyncClient) *MongoVideoService {
@@ -57,7 +59,7 @@ func (m *MongoVideoService) GetChannel(ctx context.Context, channelId string, fi
 	}
 	if len(res.ChannelList) > 0 {
 		channels, err := m.GetChannels(ctx, res.ChannelList, []string{});
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		res.Channels = *channels
@@ -98,7 +100,7 @@ func (m *MongoVideoService) GetPlaylist(ctx context.Context, id string, fields [
 	}
 	res := m.PlaylistCollection.FindOne(ctx, query, optionsFindOne)
 	if res.Err() != nil {
-		if strings.Contains(res.Err().Error() ,"mongo: no documents in result") {
+		if strings.Contains(res.Err().Error(), "mongo: no documents in result") {
 			return nil, nil
 		}
 		return nil, res.Err()

@@ -18,7 +18,6 @@ type Categories struct {
 	Data []DataCategory `mapstructure:"data" json:"data,omitempty" gorm:"column:data" bson:"data,omitempty" dynamodbav:"data,omitempty" firestore:"data,omitempty"`
 }
 
-// phần này cho postgresql
 func (c DataCategory) Value() (driver.Value, error) {
 	return json.Marshal(c)
 }

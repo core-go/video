@@ -2,10 +2,6 @@ package video
 
 import (
 	"encoding/json"
-
-	"github.com/gorilla/mux"
-
-	//"github.com/core-go/sql"
 	"errors"
 	"log"
 	"net/http"
@@ -13,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 type VideoHandler struct {

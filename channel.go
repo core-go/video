@@ -1,9 +1,6 @@
 package video
 
-import (
-	_ "github.com/gocql/gocql"
-	"time"
-)
+import "time"
 
 type ListResultChannel struct {
 	List          []Channel `mapstructure:"list" json:"list,omitempty" gorm:"column:list" bson:"list,omitempty" dynamodbav:"list,omitempty" firestore:"list,omitempty"`

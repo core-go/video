@@ -5,12 +5,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"reflect"
 	"strconv"
 	"strings"
-	"log"
 
-	pgsql "github.com/core-go/sql"
+	q "github.com/core-go/sql"
 	"github.com/core-go/video"
 	"github.com/core-go/video/category"
 	"github.com/lib/pq"
@@ -29,28 +29,28 @@ type PostgreVideoService struct {
 func NewPostgreVideoService(db *sql.DB, tubeCategory category.CategorySyncClient) (*PostgreVideoService, error) {
 	var resChannel []video.Channel
 	modelTypeChannel := reflect.TypeOf(resChannel).Elem()
-	channelFields, er1 := pgsql.GetColumnIndexes(modelTypeChannel)
+	channelFields, er1 := q.GetColumnIndexes(modelTypeChannel)
 	if er1 != nil {
 		return nil, er1
 	}
 
 	var resPlaylist []video.Playlist
 	modelTypePlaylist := reflect.TypeOf(resPlaylist).Elem()
-	playlistFields, er2 := pgsql.GetColumnIndexes(modelTypePlaylist)
+	playlistFields, er2 := q.GetColumnIndexes(modelTypePlaylist)
 	if er2 != nil {
 		return nil, er2
 	}
 
 	var resCategory video.Categories
 	modelTypeCategory := reflect.TypeOf(resCategory)
-	categoryFields, er3 := pgsql.GetColumnIndexes(modelTypeCategory)
+	categoryFields, er3 := q.GetColumnIndexes(modelTypeCategory)
 	if er3 != nil {
 		return nil, er3
 	}
 
 	var resVideo []video.Video
 	modelTypeVideo := reflect.TypeOf(resVideo).Elem()
-	videoFields, er4 := pgsql.GetColumnIndexes(modelTypeVideo)
+	videoFields, er4 := q.GetColumnIndexes(modelTypeVideo)
 	if er4 != nil {
 		return nil, er4
 	}
@@ -70,9 +70,9 @@ func (s *PostgreVideoService) GetChannel(ctx context.Context, channelId string, 
 	if len(fields) == 0 {
 		fields = append(fields, "*")
 	}
-	strq := fmt.Sprintf(`select %s from channel where id = $1`, strings.Join(fields, ","))
+	query := fmt.Sprintf(`select %s from channel where id = $1`, strings.Join(fields, ","))
 	var arrRes []video.Channel
-	err := pgsql.QueryWithMapAndArray(ctx, s.db, s.channelFields, &arrRes, pq.Array, strq, channelId)
+	err := q.QueryWithMapAndArray(ctx, s.db, s.channelFields, &arrRes, pq.Array, query, channelId)
 	if err != nil {
 		return nil, err
 	}
@@ -99,9 +99,9 @@ func (s *PostgreVideoService) GetChannels(ctx context.Context, ids []string, fie
 	if len(fields) <= 0 {
 		fields = append(fields, "*")
 	}
-	strq := fmt.Sprintf(`Select %s from channel where id in (%s)`, strings.Join(fields, ","), strings.Join(question, ","))
+	query := fmt.Sprintf(`select %s from channel where id in (%s)`, strings.Join(fields, ","), strings.Join(question, ","))
 	var arrRes []video.Channel
-	err := pgsql.QueryWithMapAndArray(ctx, s.db, s.channelFields, &arrRes, pq.Array, strq, cc...)
+	err := q.QueryWithMapAndArray(ctx, s.db, s.channelFields, &arrRes, pq.Array, query, cc...)
 	if err != nil {
 		return nil, err
 	}
@@ -115,9 +115,9 @@ func (s *PostgreVideoService) GetPlaylist(ctx context.Context, id string, fields
 	if len(fields) <= 0 {
 		fields = append(fields, "*")
 	}
-	strq := fmt.Sprintf(`Select %s from playlist where id = $1`, strings.Join(fields, ","))
+	query := fmt.Sprintf(`select %s from playlist where id = $1`, strings.Join(fields, ","))
 	var res []video.Playlist
-	err := pgsql.QueryWithMap(ctx, s.db, s.playlistFields, &res, strq, id)
+	err := q.QueryWithMap(ctx, s.db, s.playlistFields, &res, query, id)
 	if err != nil {
 		return nil, err
 	}
@@ -134,9 +134,9 @@ func (s *PostgreVideoService) GetPlaylists(ctx context.Context, ids []string, fi
 	if len(fields) <= 0 {
 		fields = append(fields, "*")
 	}
-	strq := fmt.Sprintf(`Select %s from playlist where id in (%s)`, strings.Join(fields, ","), strings.Join(question, ","))
+	query := fmt.Sprintf(`select %s from playlist where id in (%s)`, strings.Join(fields, ","), strings.Join(question, ","))
 	var res []video.Playlist
-	err := pgsql.QueryWithMap(ctx, s.db, s.playlistFields, &res, strq, cc...)
+	err := q.QueryWithMap(ctx, s.db, s.playlistFields, &res, query, cc...)
 	if err != nil {
 		return nil, err
 	}
@@ -147,9 +147,9 @@ func (s *PostgreVideoService) GetVideo(ctx context.Context, id string, fields []
 	if len(fields) <= 0 {
 		fields = append(fields, "*")
 	}
-	strq := fmt.Sprintf(`Select %s from video where id = $1`, strings.Join(fields, ","))
+	query := fmt.Sprintf(`select %s from video where id = $1`, strings.Join(fields, ","))
 	var arrRes []video.Video
-	err := pgsql.QueryWithMapAndArray(ctx, s.db, s.videoFields, &arrRes, pq.Array, strq, id)
+	err := q.QueryWithMapAndArray(ctx, s.db, s.videoFields, &arrRes, pq.Array, query, id)
 	if err != nil {
 		return nil, err
 	}
@@ -169,9 +169,9 @@ func (s *PostgreVideoService) GetVideos(ctx context.Context, ids []string, field
 	if len(fields) <= 0 {
 		fields = append(fields, "*")
 	}
-	strq := fmt.Sprintf(`Select %s from video where id in (%s)`, strings.Join(fields, ","), strings.Join(question, ","))
+	query := fmt.Sprintf(`select %s from video where id in (%s)`, strings.Join(fields, ","), strings.Join(question, ","))
 	var arrRes []video.Video
-	err := pgsql.QueryWithMapAndArray(ctx, s.db, s.videoFields, &arrRes, pq.Array, strq, cc...)
+	err := q.QueryWithMapAndArray(ctx, s.db, s.videoFields, &arrRes, pq.Array, query, cc...)
 	if err != nil {
 		return nil, err
 	}
@@ -186,9 +186,9 @@ func (s *PostgreVideoService) GetChannelPlaylists(ctx context.Context, channelId
 		fields = append(fields, "*")
 	}
 	next := getNext(nextPageToken)
-	strq := fmt.Sprintf(`select %s from playlist where channelId=$1 order by publishedAt desc limit %d offset %s`, strings.Join(fields, ","), max, next)
+	query := fmt.Sprintf(`select %s from playlist where channelId=$1 order by publishedAt desc limit %d offset %s`, strings.Join(fields, ","), max, next)
 	var res video.ListResultPlaylist
-	er1 := pgsql.QueryWithMap(ctx, s.db, s.playlistFields, &res.List, strq, channelId)
+	er1 := q.QueryWithMap(ctx, s.db, s.playlistFields, &res.List, query, channelId)
 	if er1 != nil {
 		return nil, er1
 	}
@@ -205,14 +205,13 @@ func (s *PostgreVideoService) GetChannelPlaylists(ctx context.Context, channelId
 }
 
 func (s *PostgreVideoService) GetChannelVideos(ctx context.Context, channelId string, max int, nextPageToken string, fields []string) (*video.ListResultVideos, error) {
-	// ---- none
 	if len(fields) <= 0 {
 		fields = append(fields, "*")
 	}
 	next := getNext(nextPageToken)
-	strq := fmt.Sprintf(`select %s from video where channelId=$1 order by publishedAt desc limit %d offset %s`, strings.Join(fields, ","), max, next)
+	query := fmt.Sprintf(`select %s from video where channelId=$1 order by publishedAt desc limit %d offset %s`, strings.Join(fields, ","), max, next)
 	var res video.ListResultVideos
-	er1 := pgsql.QueryWithMapAndArray(ctx, s.db, s.videoFields, &res.List, pq.Array, strq, channelId)
+	er1 := q.QueryWithMapAndArray(ctx, s.db, s.videoFields, &res.List, pq.Array, query, channelId)
 	if er1 != nil {
 		return nil, er1
 	}
@@ -229,9 +228,9 @@ func (s *PostgreVideoService) GetChannelVideos(ctx context.Context, channelId st
 }
 
 func (s *PostgreVideoService) GetPlaylistVideos(ctx context.Context, playlistId string, max int, nextPageToken string, fields []string) (*video.ListResultVideos, error) {
-	strq1 := `select * from playlistVideo where id = $1 `
+	query1 := `select * from playlistVideo where id = $1 `
 	var resPlaylistVideoIdVideos []video.PlaylistVideoIdVideos
-	er1 := pgsql.QueryWithMapAndArray(ctx, s.db, nil, &resPlaylistVideoIdVideos, pq.Array, strq1, playlistId)
+	er1 := q.QueryWithMapAndArray(ctx, s.db, nil, &resPlaylistVideoIdVideos, pq.Array, query1, playlistId)
 	if er1 != nil {
 		return nil, er1
 	}
@@ -245,9 +244,9 @@ func (s *PostgreVideoService) GetPlaylistVideos(ctx context.Context, playlistId 
 		fields = append(fields, "*")
 	}
 	next := getNext(nextPageToken)
-	strq2 := fmt.Sprintf(`select %s from video where id in (%s) order by publishedAt desc limit %d offset %s`, strings.Join(fields, ","), strings.Join(questions, ","), max, next)
+	query2 := fmt.Sprintf(`select %s from video where id in (%s) order by publishedAt desc limit %d offset %s`, strings.Join(fields, ","), strings.Join(questions, ","), max, next)
 	var res video.ListResultVideos
-	er2 := pgsql.QueryWithMapAndArray(ctx, s.db, s.videoFields, &res.List, pq.Array, strq2, values...)
+	er2 := q.QueryWithMapAndArray(ctx, s.db, s.videoFields, &res.List, pq.Array, query2, values...)
 	if er2 != nil {
 		return nil, er2
 	}
@@ -256,7 +255,7 @@ func (s *PostgreVideoService) GetPlaylistVideos(ctx context.Context, playlistId 
 	res.Limit = max
 	r, err := strconv.Atoi(next)
 	if err != nil {
-		return nil, errors.New("nextPageToken wrong")
+		return nil, errors.New("invalid nextPageToken")
 	}
 	res.NextPageToken = createNextPageToken(lenList, max, r, res.List[lenList-1].Id, "")
 	return &res, nil
@@ -265,7 +264,7 @@ func (s *PostgreVideoService) GetPlaylistVideos(ctx context.Context, playlistId 
 func (s *PostgreVideoService) GetCategories(ctx context.Context, regionCode string) (*video.Categories, error) {
 	sql := `select * from category where id = $1`
 	var arrCategory []video.Categories
-	err := pgsql.QueryWithMapAndArray(ctx, s.db, s.categoryFields, &arrCategory, pq.Array,sql , regionCode)
+	err := q.QueryWithMapAndArray(ctx, s.db, s.categoryFields, &arrCategory, pq.Array,sql , regionCode)
 	if err != nil {
 		return nil, err
 	}
@@ -291,10 +290,10 @@ func (s *PostgreVideoService) GetCategories(ctx context.Context, regionCode stri
 
 func (s *PostgreVideoService) SearchChannel(ctx context.Context, channelSM video.ChannelSM, max int, nextPageToken string, fields []string) (*video.ListResultChannel, error) {
 	next := getNext(nextPageToken)
-	strq, statement := buildChannelQuery(channelSM, fields)
-	strq = strq + fmt.Sprintf(` limit %d offset %s`, max, next)
+	query, statement := buildChannelQuery(channelSM, fields)
+	query = query + fmt.Sprintf(` limit %d offset %s`, max, next)
 	var listResultChannel video.ListResultChannel
-	err := pgsql.QueryWithMapAndArray(ctx, s.db, s.channelFields, &listResultChannel.List, pq.Array, strq, statement...)
+	err := q.QueryWithMapAndArray(ctx, s.db, s.channelFields, &listResultChannel.List, pq.Array, query, statement...)
 	if err != nil {
 		return nil, err
 	}
@@ -302,7 +301,7 @@ func (s *PostgreVideoService) SearchChannel(ctx context.Context, channelSM video
 	lenList := len(listResultChannel.List)
 	r, err := strconv.Atoi(next)
 	if err != nil {
-		return nil, errors.New("nextPageToken wrong")
+		return nil, errors.New("invalid nextPageToken")
 	}
 	if lenList > 0 {
 		listResultChannel.NextPageToken = createNextPageToken(lenList, max, r, listResultChannel.List[lenList-1].Id, "")
@@ -312,10 +311,10 @@ func (s *PostgreVideoService) SearchChannel(ctx context.Context, channelSM video
 
 func (s *PostgreVideoService) SearchPlaylists(ctx context.Context, playlistSM video.PlaylistSM, max int, nextPageToken string, fields []string) (*video.ListResultPlaylist, error) {
 	next := getNext(nextPageToken)
-	strq, statement := buildPlaylistQuery(playlistSM, fields)
-	strq = strq + fmt.Sprintf(` limit %d offset %s`, max, next)
+	query, statement := buildPlaylistQuery(playlistSM, fields)
+	query = query + fmt.Sprintf(` limit %d offset %s`, max, next)
 	var res video.ListResultPlaylist
-	err := pgsql.QueryWithMap(ctx, s.db, s.playlistFields, &res.List, strq, statement...)
+	err := q.QueryWithMap(ctx, s.db, s.playlistFields, &res.List, query, statement...)
 	if err != nil {
 		return nil, err
 	}
@@ -334,10 +333,10 @@ func (s *PostgreVideoService) SearchPlaylists(ctx context.Context, playlistSM vi
 
 func (s *PostgreVideoService) SearchVideos(ctx context.Context, itemSM video.ItemSM, max int, nextPageToken string, fields []string) (*video.ListResultVideos, error) {
 	next := getNext(nextPageToken)
-	strq, statement := buildVideoQuery(itemSM, fields)
-	strq = strq + fmt.Sprintf(` limit %d offset %s`, max, next)
+	query, statement := buildVideoQuery(itemSM, fields)
+	query = query + fmt.Sprintf(` limit %d offset %s`, max, next)
 	var res video.ListResultVideos
-	err := pgsql.QueryWithMapAndArray(ctx, s.db, s.videoFields, &res.List, pq.Array, strq, statement...)
+	err := q.QueryWithMapAndArray(ctx, s.db, s.videoFields, &res.List, pq.Array, query, statement...)
 	if err != nil {
 		return nil, err
 	}
@@ -354,10 +353,10 @@ func (s *PostgreVideoService) SearchVideos(ctx context.Context, itemSM video.Ite
 }
 
 func (s *PostgreVideoService) Search(ctx context.Context, itemSM video.ItemSM, max int, nextPageToken string, fields []string) (*video.ListResultVideos, error) {
-	strqChannel, statementChannel := buildSearchUnionQuery("channel", itemSM, fields)
+	queryChannel, statementChannel := buildSearchUnionQuery("channel", itemSM, fields)
 	var channels []video.Video
 	var resChannel video.ListResultVideos
-	er1 := pgsql.QueryWithMap(ctx, s.db, s.videoFields, &channels, strqChannel, statementChannel...)
+	er1 := q.QueryWithMap(ctx, s.db, s.videoFields, &channels, queryChannel, statementChannel...)
 	if er1 != nil {
 		return nil, er1
 	}
@@ -365,10 +364,10 @@ func (s *PostgreVideoService) Search(ctx context.Context, itemSM video.ItemSM, m
 	resChannelList := resChannel.List
 
 	// ----------------------
-	strqPlaylist, statementPlaylist := buildSearchUnionQuery("playlist", itemSM, fields)
+	queryPlaylist, statementPlaylist := buildSearchUnionQuery("playlist", itemSM, fields)
 	var playlists []video.Video
 	var resPlaylist video.ListResultVideos
-	er2 := pgsql.QueryWithMap(ctx, s.db, s.videoFields, &playlists, strqPlaylist, statementPlaylist...)
+	er2 := q.QueryWithMap(ctx, s.db, s.videoFields, &playlists, queryPlaylist, statementPlaylist...)
 	if er2 != nil {
 		return nil, er2
 	}
@@ -376,10 +375,10 @@ func (s *PostgreVideoService) Search(ctx context.Context, itemSM video.ItemSM, m
 	resPlaylistList := resPlaylist.List
 
 	// ----------------------
-	strqVideo, statementVideo := buildSearchUnionQuery("video", itemSM, fields)
+	queryVideo, statementVideo := buildSearchUnionQuery("video", itemSM, fields)
 	var videos []video.Video
 	var resVideo video.ListResultVideos
-	er3 := pgsql.QueryWithMap(ctx, s.db, s.videoFields, &videos, strqVideo, statementVideo...)
+	er3 := q.QueryWithMap(ctx, s.db, s.videoFields, &videos, queryVideo, statementVideo...)
 	if er3 != nil {
 		return nil, er3
 	}
@@ -417,10 +416,10 @@ func (s *PostgreVideoService) GetRelatedVideos(ctx context.Context, videoId stri
 		if len(resVd.Tags) == 0 {
 			return nil, errors.New("video doesn't have any tag")
 		} else {
-			strq, statement := buildRelatedVideoQuery(videoId, resVd.Tags, fields)
-			strq = strq + fmt.Sprintf(` limit %d offset %s`, max, next)
+			query, statement := buildRelatedVideoQuery(videoId, resVd.Tags, fields)
+			query = query + fmt.Sprintf(` limit %d offset %s`, max, next)
 			var arrRes []video.Video
-			err := pgsql.QueryWithMapAndArray(ctx, s.db, s.videoFields, &arrRes, pq.Array, strq, statement...)
+			err := q.QueryWithMapAndArray(ctx, s.db, s.videoFields, &arrRes, pq.Array, query, statement...)
 			if err != nil {
 				return nil, err
 			}
@@ -446,10 +445,10 @@ func (s *PostgreVideoService) GetRelatedVideos(ctx context.Context, videoId stri
 
 func (s *PostgreVideoService) GetPopularVideos(ctx context.Context, regionCode string, categoryId string, limit int, nextPageToken string, fields []string) (*video.ListResultVideos, error) {
 	next := getNext(nextPageToken)
-	strq, statement := buildPopularVideoQuery(regionCode, categoryId, fields)
-	strq = strq + fmt.Sprintf(` limit %d offset %s`, limit, next)
+	query, statement := buildPopularVideoQuery(regionCode, categoryId, fields)
+	query = query + fmt.Sprintf(` limit %d offset %s`, limit, next)
 	var videos []video.Video
-	err := pgsql.QueryWithMapAndArray(ctx, s.db, s.videoFields, &videos, pq.Array, strq, statement...)
+	err := q.QueryWithMapAndArray(ctx, s.db, s.videoFields, &videos, pq.Array, query, statement...)
 	if err != nil {
 		return nil, err
 	}
@@ -459,7 +458,7 @@ func (s *PostgreVideoService) GetPopularVideos(ctx context.Context, regionCode s
 	res.Limit = limit
 	r, err := strconv.Atoi(next)
 	if err != nil {
-		return nil, errors.New("nextPageToken wrong")
+		return nil, errors.New("invalid nextPageToken")
 	}
 	if lenList > 0 {
 		res.NextPageToken = createNextPageToken(lenList, limit, r, res.List[lenList-1].Id, "")
@@ -496,7 +495,7 @@ func buildChannelQuery(s video.ChannelSM, fields []string) (string, []interface{
 	if len(fields) <= 0 {
 		fields = append(fields, "*")
 	}
-	strq := fmt.Sprintf(`select %s from channel`, strings.Join(fields, ","))
+	query := fmt.Sprintf(`select %s from channel`, strings.Join(fields, ","))
 	var condition []string
 	var params []interface{}
 	i := 1
@@ -528,12 +527,12 @@ func buildChannelQuery(s video.ChannelSM, fields []string) (string, []interface{
 
 	if len(condition) > 0 {
 		cond := strings.Join(condition, " and ")
-		strq += fmt.Sprintf(` where %s`, cond)
+		query += fmt.Sprintf(` where %s`, cond)
 	}
 	if len(s.Sort) > 0 {
-		strq += fmt.Sprintf(` order by %s desc`, s.Sort)
+		query += fmt.Sprintf(` order by %s desc`, s.Sort)
 	}
-	return strq, params
+	return query, params
 }
 
 func buildPlaylistQuery(s video.PlaylistSM, fields []string) (string, []interface{}) {
@@ -541,7 +540,7 @@ func buildPlaylistQuery(s video.PlaylistSM, fields []string) (string, []interfac
 		fields = append(fields, "*")
 	}
 
-	strq := fmt.Sprintf(`select %s from playlist`, strings.Join(fields, ","))
+	query := fmt.Sprintf(`select %s from playlist`, strings.Join(fields, ","))
 	var condition []string
 	var params []interface{}
 	i := 1
@@ -567,19 +566,16 @@ func buildPlaylistQuery(s video.PlaylistSM, fields []string) (string, []interfac
 		condition = append(condition, fmt.Sprintf(`(title ilike $%d or description ilike $%d)`, i, i+1))
 	}
 
-	// ---- đổ các item trong []condition và chuỗi cond (nếu []condiion ko empty), từ đó nối vào câu strq
 	if len(condition) > 0 {
 		cond := strings.Join(condition, " and ")
-		strq += fmt.Sprintf(` where %s`, cond)
+		query += fmt.Sprintf(` where %s`, cond)
 	}
 
-	// ---- nếu parameter sort trong request ko empty thì nối thêm điều kiện sort vào câu strq
 	if len(s.Sort) > 0 {
-		strq += fmt.Sprintf(` order by %s desc`, s.Sort)
+		query += fmt.Sprintf(` order by %s desc`, s.Sort)
 	}
 
-	// ---- return ra câu query cuối cùng và tập hợp các params
-	return strq, params
+	return query, params
 }
 
 func buildVideoQuery(s video.ItemSM, fields []string) (string, []interface{}) {
@@ -587,7 +583,7 @@ func buildVideoQuery(s video.ItemSM, fields []string) (string, []interface{}) {
 		fields = append(fields, "*")
 	}
 	log.Println(s)
-	strq := fmt.Sprintf(`select %s from video`, strings.Join(fields, ","))
+	query := fmt.Sprintf(`select %s from video`, strings.Join(fields, ","))
 	var condition []string
 	var params []interface{}
 	i := 1
@@ -628,21 +624,23 @@ func buildVideoQuery(s video.ItemSM, fields []string) (string, []interface{}) {
 		case "long":
 			compare = "duration > 1200"
 		default:
-			compare = "duration > 0"
+			compare = ""
 		}
-		condition = append(condition, compare)
+		if len(compare) > 0 {
+			condition = append(condition, compare)
+		}
 	}
 
 	if len(condition) > 0 {
 		cond := strings.Join(condition, " and ")
-		strq += fmt.Sprintf(` where %s`, cond)
+		query += fmt.Sprintf(` where %s`, cond)
 	}
 
 	if len(s.Sort) > 0 {
-		strq += fmt.Sprintf(` order by %s desc`, s.Sort)
+		query += fmt.Sprintf(` order by %s desc`, s.Sort)
 	}
 
-	return strq, params
+	return query, params
 }
 
 func buildRelatedVideoQuery(videoId string, tags []string, fields []string) (string, []interface{}) {
@@ -683,7 +681,7 @@ func buildPopularVideoQuery(regionCode string, categoryId string, fields []strin
 		fields = append(fields, "*")
 	}
 
-	strq := fmt.Sprintf(`select %s from video`, strings.Join(fields, ","))
+	query := fmt.Sprintf(`select %s from video`, strings.Join(fields, ","))
 	var condition []string
 	var params []interface{}
 	i := 1
@@ -701,10 +699,10 @@ func buildPopularVideoQuery(regionCode string, categoryId string, fields []strin
 
 	if len(condition) > 0 {
 		cond := strings.Join(condition, " and ")
-		strq += fmt.Sprintf(` where %s`, cond)
+		query += fmt.Sprintf(` where %s`, cond)
 	}
 
-	return strq, params
+	return query, params
 }
 
 func buildSearchUnionQuery(searchType string, s video.ItemSM, fields []string) (string, []interface{}) {
@@ -720,7 +718,7 @@ func buildSearchUnionQuery(searchType string, s video.ItemSM, fields []string) (
 		fields = append(fields, videoString)
 	}
 
-	strq := fmt.Sprintf(`select %s from %s`, strings.Join(fields, ","), searchType)
+	query := fmt.Sprintf(`select %s from %s`, strings.Join(fields, ","), searchType)
 	var condition []string
 	var params []interface{}
 	i := 1
@@ -734,8 +732,8 @@ func buildSearchUnionQuery(searchType string, s video.ItemSM, fields []string) (
 
 	if len(condition) > 0 {
 		cond := strings.Join(condition, " and ")
-		strq += fmt.Sprintf(` where %s`, cond)
+		query += fmt.Sprintf(` where %s`, cond)
 	}
 
-	return strq, params
+	return query, params
 }

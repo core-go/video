@@ -1,8 +1,6 @@
 package video
 
-import (
-	"time"
-)
+import "time"
 
 type ChannelSM struct {
 	Q                 string     `mapstructure:"q" json:"q,omitempty" gorm:"column:q" bson:"q,omitempty" dynamodbav:"q,omitempty" firestore:"q"`
