@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gorilla/mux"
+	. "github.com/core-go/video"
 )
 
 type VideoHandler struct {
@@ -45,18 +45,20 @@ func NewVideoHandler(clientService VideoService) (*VideoHandler,error) {
 }
 
 func (c *VideoHandler) GetChannel(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)["params"]
-	s := strings.Split(params, "&")
-	if len(s[0]) <= 0 {
+	s := GetParam(r, 0)
+	//s := strings.Split(params, "?")
+	if len(s) <= 0 {
 		http.Error(w, "Id cannot be empty", http.StatusBadRequest)
 		return
 	}
 	var fields []string
-	if len(s) > 1 && len(s[1]) > 0 {
-		fields = strings.Split(s[1], ",")
+	ps := r.URL.Query()
+	fieldsEle := ps.Get("fields")
+	if len(fieldsEle) > 0 {
+		fields = strings.Split(fieldsEle, ",")
 	}
 	fields = checkFields(c.channelType, fields)
-	res, err := c.Video.GetChannel(r.Context(), s[0], fields)
+	res, err := c.Video.GetChannel(r.Context(), s, fields)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -65,16 +67,18 @@ func (c *VideoHandler) GetChannel(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *VideoHandler) GetChannels(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)["params"]
-	s := strings.Split(params, "&")
-	if len(s[0]) <= 0 {
+	s := GetParam(r, 0)
+	//s := strings.Split(params, "&")
+	if len(s) <= 0 {
 		http.Error(w, "Id cannot be empty", http.StatusBadRequest)
 		return
 	}
-	arrayId := strings.Split(s[0], ",")
+	arrayId := strings.Split(s, ",")
 	var fields []string
-	if len(s) > 1 && len(s[1]) > 0 {
-		fields = strings.Split(s[1], ",")
+	ps := r.URL.Query()
+	fieldsEle := ps.Get("fields")
+	if len(fieldsEle) > 0 {
+		fields = strings.Split(fieldsEle, ",")
 	}
 	fields = checkFields(c.channelType, fields)
 	res, err := c.Video.GetChannels(r.Context(), arrayId, fields)
@@ -86,18 +90,20 @@ func (c *VideoHandler) GetChannels(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *VideoHandler) GetPlaylist(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)["params"]
-	s := strings.Split(params, "&")
-	if len(s[0]) <= 0 {
+	s := GetParam(r, 0)
+	//s := strings.Split(params, "&")
+	if len(s) <= 0 {
 		http.Error(w, "Id cannot be empty", http.StatusBadRequest)
 		return
 	}
 	var fields []string
-	if len(s) > 1 && len(s[1]) > 0 {
-		fields = strings.Split(s[1], ",")
+	ps := r.URL.Query()
+	fieldsEle := ps.Get("fields")
+	if len(fieldsEle) > 0 {
+		fields = strings.Split(fieldsEle, ",")
 	}
 	fields = checkFields(c.playlistType, fields)
-	res, err := c.Video.GetPlaylist(r.Context(), s[0], fields)
+	res, err := c.Video.GetPlaylist(r.Context(), s, fields)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -106,16 +112,18 @@ func (c *VideoHandler) GetPlaylist(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *VideoHandler) GetPlaylists(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)["params"]
-	s := strings.Split(params, "&")
-	if len(s[0]) <= 0 {
+	s := GetParam(r, 0)
+	//s := strings.Split(params, "&")
+	if len(s) <= 0 {
 		http.Error(w, "id cannot be empty", http.StatusBadRequest)
 		return
 	}
-	ids := strings.Split(s[0], ",")
+	ids := strings.Split(s, ",")
 	var fields []string
-	if len(s) > 1 && len(s[1]) > 0 {
-		fields = strings.Split(s[1], ",")
+	ps := r.URL.Query()
+	fieldsEle := ps.Get("fields")
+	if len(fieldsEle) > 0 {
+		fields = strings.Split(fieldsEle, ",")
 	}
 	fields = checkFields(c.playlistType, fields)
 	res, err := c.Video.GetPlaylists(r.Context(), ids, fields)
@@ -126,18 +134,20 @@ func (c *VideoHandler) GetPlaylists(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *VideoHandler) GetVideo(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)["params"]
-	s := strings.Split(params, "&")
-	if len(s[0]) <= 0 {
+	s := GetParam(r, 0)
+	//s := strings.Split(params, "&")
+	if len(s) <= 0 {
 		http.Error(w, "Id cannot empty!", http.StatusBadRequest)
 		return
 	}
 	var fields []string
-	if len(s) > 1 && len(s[1]) > 0 {
-		fields = strings.Split(s[1], ",")
+	ps := r.URL.Query()
+	fieldsEle := ps.Get("fields")
+	if len(fieldsEle) > 0 {
+		fields = strings.Split(fieldsEle, ",")
 	}
 	fields = checkFields(c.videoType, fields)
-	res, err := c.Video.GetVideo(r.Context(), s[0], fields)
+	res, err := c.Video.GetVideo(r.Context(), s, fields)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -146,16 +156,18 @@ func (c *VideoHandler) GetVideo(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *VideoHandler) GetVideos(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)["params"]
-	s := strings.Split(params, "&")
-	if len(s[0]) <= 0 {
+	s := GetParam(r, 0)
+	//s := strings.Split(params, "&")
+	if len(s) <= 0 {
 		http.Error(w, "Ids cannot be empty!", http.StatusBadRequest)
 		return
 	}
-	ids := strings.Split(s[0], ",")
+	ids := strings.Split(s, ",")
 	var fields []string
-	if len(s) > 1 && len(s[1]) > 0 {
-		fields = strings.Split(s[1], ",")
+	ps := r.URL.Query()
+	fieldsEle := ps.Get("fields")
+	if len(fieldsEle) > 0 {
+		fields = strings.Split(fieldsEle, ",")
 	}
 	fields = checkFields(c.videoType, fields)
 	res, err := c.Video.GetVideos(r.Context(), ids, fields)
@@ -270,8 +282,9 @@ func (c *VideoHandler) GetVideosFromChannelIdOrPlaylistId(w http.ResponseWriter,
 }
 
 func (c *VideoHandler) GetCategory(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)["params"]
-	res, err := c.Video.GetCategories(r.Context(), params)
+	s := GetParam(r, 0)
+	//params := mux.Vars(r)["params"]
+	res, err := c.Video.GetCategories(r.Context(), s)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -596,4 +609,19 @@ func respond(w http.ResponseWriter, result interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(response)
+}
+
+func GetParam(r *http.Request, options... int) string {
+	offset := 0
+	if len(options) > 0 && options[0] > 0 {
+		offset = options[0]
+	}
+	s := r.URL.Path
+	params := strings.Split(s, "/")
+	i := len(params)-1-offset
+	if i >= 0 {
+		return params[i]
+	} else {
+		return ""
+	}
 }

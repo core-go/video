@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	. "github.com/core-go/video"
-	"github.com/gorilla/mux"
 )
 
 type SyncHandler struct {
@@ -69,8 +68,8 @@ func (h *SyncHandler) SyncPlaylist(w http.ResponseWriter, r *http.Request) {
 	respond(w, result)
 }
 
-func (h *SyncHandler) SyncSubctiption(w http.ResponseWriter, r *http.Request) {
-	id := mux.Vars(r)["id"]
+func (h *SyncHandler) SyncSubscription(w http.ResponseWriter, r *http.Request) {
+	id := GetParam(r, 0)
 	if len(id) <= 0 {
 		http.Error(w, "Id cannot empty", http.StatusBadRequest)
 		return

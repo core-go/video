@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	. "github.com/core-go/video"
-	"github.com/gorilla/mux"
 )
 
 type YoutubeHandler struct {
@@ -20,7 +19,7 @@ func NewTubeHandler(syncClient SyncClient) *YoutubeHandler {
 }
 
 func (t *YoutubeHandler) GetChannel(w http.ResponseWriter, r *http.Request) {
-	id := mux.Vars(r)["id"]
+	id := GetParam(r, 0)
 	if len(id) == 0 {
 		http.Error(w, "Id cannot be empty", http.StatusBadRequest)
 		return
@@ -34,7 +33,7 @@ func (t *YoutubeHandler) GetChannel(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *YoutubeHandler) GetChannels(w http.ResponseWriter, r *http.Request) {
-	id := mux.Vars(r)["id"]
+	id := GetParam(r, 0)
 	if len(id) == 0 {
 		http.Error(w, "Id cannot be empty", http.StatusBadRequest)
 		return
@@ -49,7 +48,7 @@ func (t *YoutubeHandler) GetChannels(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *YoutubeHandler) GetPlaylist(w http.ResponseWriter, r *http.Request) {
-	id := mux.Vars(r)["id"]
+	id := GetParam(r, 0)
 	if len(id) == 0 {
 		http.Error(w, "Id cannot be empty", http.StatusBadRequest)
 		return
@@ -63,7 +62,7 @@ func (t *YoutubeHandler) GetPlaylist(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *YoutubeHandler) GetPlaylists(w http.ResponseWriter, r *http.Request) {
-	id := mux.Vars(r)["id"]
+	id := GetParam(r, 0)
 	if len(id) == 0 {
 		http.Error(w, "Id cannot be empty", http.StatusBadRequest)
 		return
@@ -78,7 +77,7 @@ func (t *YoutubeHandler) GetPlaylists(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *YoutubeHandler) GetChannelPlaylists(w http.ResponseWriter, r *http.Request) {
-	id := mux.Vars(r)["id"]
+	id := GetParam(r, 0)
 	if len(id) == 0 {
 		http.Error(w, "Id cannot be empty", http.StatusBadRequest)
 		return
@@ -90,17 +89,21 @@ func (t *YoutubeHandler) GetChannelPlaylists(w http.ResponseWriter, r *http.Requ
 		channelId = s[0]
 	}
 	var max int64
-	if s[1] != "" {
-		maxR, err := strconv.ParseInt(s[1], 10, 64)
-		if err != nil {
-			http.Error(w, "cannot be empty", http.StatusBadRequest)
-			return
+	if len(s) > 1 {
+		if s[1] != "" {
+			maxR, err := strconv.ParseInt(s[1], 10, 64)
+			if err != nil {
+				return
+				http.Error(w, "cannot be empty", http.StatusBadRequest)
+			}
+			max = maxR
 		}
-		max = maxR
 	}
 	var nextPageToken string
-	if s[2] != "" {
-		nextPageToken = s[2]
+	if len(s) > 2 {
+		if s[2] != "" {
+			nextPageToken = s[2]
+		}
 	}
 	result, err := t.service.GetChannelPlaylists(channelId, int16(max), nextPageToken)
 	if err != nil {
@@ -111,7 +114,7 @@ func (t *YoutubeHandler) GetChannelPlaylists(w http.ResponseWriter, r *http.Requ
 }
 
 func (t *YoutubeHandler) GetPlaylistVideos(w http.ResponseWriter, r *http.Request) {
-	id := mux.Vars(r)["id"]
+	id := GetParam(r, 0)
 	if len(id) == 0 {
 		http.Error(w, "Id cannot be empty", http.StatusBadRequest)
 		return
@@ -123,17 +126,21 @@ func (t *YoutubeHandler) GetPlaylistVideos(w http.ResponseWriter, r *http.Reques
 		channelId = s[0]
 	}
 	var max int64
-	if s[1] != "" {
-		maxR, err := strconv.ParseInt(s[1], 10, 64)
-		if err != nil {
-			http.Error(w, "cannot be empty", http.StatusBadRequest)
-			return
+	if len(s) > 1 {
+		if s[1] != "" {
+			maxR, err := strconv.ParseInt(s[1], 10, 64)
+			if err != nil {
+				http.Error(w, "cannot be empty", http.StatusBadRequest)
+				return
+			}
+			max = maxR
 		}
-		max = maxR
 	}
 	var nextPageToken string
-	if s[2] != "" {
-		nextPageToken = s[2]
+	if len(s) > 2 {
+		if s[2] != "" {
+			nextPageToken = s[2]
+		}
 	}
 	result, err := t.service.GetPlaylistVideos(channelId, int16(max), nextPageToken)
 	if err != nil {
@@ -144,7 +151,7 @@ func (t *YoutubeHandler) GetPlaylistVideos(w http.ResponseWriter, r *http.Reques
 }
 
 func (t *YoutubeHandler) GetVideos(w http.ResponseWriter, r *http.Request) {
-	id := mux.Vars(r)["id"]
+	id := GetParam(r, 0)
 	if len(id) == 0 {
 		http.Error(w, "Id cannot be empty", http.StatusBadRequest)
 		return
