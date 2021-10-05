@@ -9,8 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	. "github.com/core-go/video"
 )
 
 type VideoHandler struct {
