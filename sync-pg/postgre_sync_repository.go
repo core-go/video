@@ -7,49 +7,47 @@ import (
 	"reflect"
 	"strings"
 
-	q "github.com/core-go/sql"
 	"github.com/core-go/video"
 	"github.com/lib/pq"
-	_ "github.com/lib/pq"
 )
 
 type PostgreVideoRepository struct {
 	DB                     *sql.DB
 	fieldsIndexChannelSync map[string]int
-	channelSchema          *q.Schema
-	videoSchema            *q.Schema
-	playlistSchema         *q.Schema
-	channelSyncSchema      *q.Schema
-	playlistVideoSchema    *q.Schema
+	channelSchema          *Schema
+	videoSchema            *Schema
+	playlistSchema         *Schema
+	channelSyncSchema      *Schema
+	playlistVideoSchema    *Schema
 }
 
 func NewPostgreVideoRepository(db *sql.DB) (*PostgreVideoRepository, error) {
 	var channelSync []video.ChannelSync
 	modelType := reflect.TypeOf(channelSync).Elem()
-	fieldsIndexChannelSync, er1 := q.GetColumnIndexes(modelType)
+	fieldsIndexChannelSync, er1 := GetColumnIndexes(modelType)
 	if er1 != nil {
 		return nil, er1
 	}
 
 	var channelSyncSc video.ChannelSync
 	modelTypeChannelSync := reflect.TypeOf(channelSyncSc)
-	schemaChannelSync := q.CreateSchema(modelTypeChannelSync)
+	schemaChannelSync := CreateSchema(modelTypeChannelSync)
 
 	var channel video.Channel
 	modelTypeChannel := reflect.TypeOf(channel)
-	schemaChannel := q.CreateSchema(modelTypeChannel)
+	schemaChannel := CreateSchema(modelTypeChannel)
 
 	var playlist video.Playlist
 	modelTypePlaylist := reflect.TypeOf(playlist)
-	schemaPlaylist := q.CreateSchema(modelTypePlaylist)
+	schemaPlaylist := CreateSchema(modelTypePlaylist)
 
 	var playlistVideo video.PlaylistVideoIdVideos
 	modelTypePlaylistVideo := reflect.TypeOf(playlistVideo)
-	schemaPlaylistVideo := q.CreateSchema(modelTypePlaylistVideo)
+	schemaPlaylistVideo := CreateSchema(modelTypePlaylistVideo)
 
 	var video video.Video
 	modelTypeVideo := reflect.TypeOf(video)
-	schemaVideo := q.CreateSchema(modelTypeVideo)
+	schemaVideo := CreateSchema(modelTypeVideo)
 
 	return &PostgreVideoRepository{
 		DB:                     db,
@@ -65,7 +63,7 @@ func NewPostgreVideoRepository(db *sql.DB) (*PostgreVideoRepository, error) {
 func (s *PostgreVideoRepository) GetChannelSync(ctx context.Context, channelId string) (*video.ChannelSync, error) {
 	query := "select * from channelSync where id = $1 limit 1"
 	var channelSyncRes []video.ChannelSync
-	err := q.QueryWithMap(ctx, s.DB, s.fieldsIndexChannelSync, &channelSyncRes, query, channelId)
+	err := QueryWithMap(ctx, s.DB, s.fieldsIndexChannelSync, &channelSyncRes, query, channelId)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +75,7 @@ func (s *PostgreVideoRepository) GetChannelSync(ctx context.Context, channelId s
 }
 
 func (s *PostgreVideoRepository) SaveChannel(ctx context.Context, channel video.Channel) (int64, error) {
-	query, args, err1 := q.BuildToSaveWithArray("channel", channel, q.DriverPostgres, pq.Array, s.channelSchema)
+	query, args, err1 := BuildToSaveWithArray("channel", channel, DriverPostgres, pq.Array, s.channelSchema)
 	if err1 != nil {
 		return 0, err1
 	}
@@ -115,12 +113,12 @@ func (s *PostgreVideoRepository) GetVideoIds(ctx context.Context, ids []string) 
 }
 
 func (s *PostgreVideoRepository) SaveVideos(ctx context.Context, videos []video.Video) (int, error) {
-	statements, err0 := q.BuildToSaveBatchWithArray("video", videos, q.DriverPostgres, pq.Array, s.videoSchema)
+	statements, err0 := BuildToSaveBatchWithArray("video", videos, DriverPostgres, pq.Array, s.videoSchema)
 	if err0 != nil {
 		return 0, err0
 	}
 
-	result, err := q.ExecuteAll(ctx, s.DB, statements...)
+	result, err := ExecuteAll(ctx, s.DB, statements...)
 	if err != nil {
 		return 0, err
 	}
@@ -129,12 +127,12 @@ func (s *PostgreVideoRepository) SaveVideos(ctx context.Context, videos []video.
 }
 
 func (s *PostgreVideoRepository) SavePlaylists(ctx context.Context, playlists []video.Playlist) (int, error) {
-	statements, err := q.BuildToSaveBatchWithArray("playlist", playlists, q.DriverPostgres, pq.Array, s.playlistSchema)
+	statements, err := BuildToSaveBatchWithArray("playlist", playlists, DriverPostgres, pq.Array, s.playlistSchema)
 	if err != nil {
 		return 0, err
 	}
 
-	result, err := q.ExecuteAll(ctx, s.DB, statements...)
+	result, err := ExecuteAll(ctx, s.DB, statements...)
 	if err != nil {
 		return 0, err
 	}
@@ -147,7 +145,7 @@ func (s *PostgreVideoRepository) SavePlaylistVideos(ctx context.Context, playlis
 		Id:     playlistId,
 		Videos: videos,
 	}
-	query, args, err1 := q.BuildToSaveWithArray("playlistVideo", playlistVideos, q.DriverPostgres, pq.Array, s.playlistVideoSchema)
+	query, args, err1 := BuildToSaveWithArray("playlistVideo", playlistVideos, DriverPostgres, pq.Array, s.playlistVideoSchema)
 	if err1 != nil {
 		return 0, err1
 	}
@@ -159,7 +157,7 @@ func (s *PostgreVideoRepository) SavePlaylistVideos(ctx context.Context, playlis
 }
 
 func (s *PostgreVideoRepository) SaveChannelSync(ctx context.Context, channel video.ChannelSync) (int, error) {
-	query, args, err1 := q.BuildToSaveWithArray("channelSync", channel, q.DriverPostgres, pq.Array, s.channelSyncSchema)
+	query, args, err1 := BuildToSaveWithArray("channelSync", channel, DriverPostgres, pq.Array, s.channelSyncSchema)
 	if err1 != nil {
 		return 0, err1
 	}
@@ -171,12 +169,12 @@ func (s *PostgreVideoRepository) SaveChannelSync(ctx context.Context, channel vi
 }
 
 func (s *PostgreVideoRepository) SavePlaylist(ctx context.Context, playlist video.Playlist) (int, error) {
-	statementss, err0 := q.BuildToSaveBatchWithArray("playlist", playlist, q.DriverPostgres, pq.Array, s.playlistSchema)
+	statementss, err0 := BuildToSaveBatchWithArray("playlist", playlist, DriverPostgres, pq.Array, s.playlistSchema)
 	if err0 != nil {
 		return 0, err0
 	}
 
-	result, err := q.ExecuteAll(ctx, s.DB, statementss...)
+	result, err := ExecuteAll(ctx, s.DB, statementss...)
 	if err != nil {
 		return 0, err
 	}

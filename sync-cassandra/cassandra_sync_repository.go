@@ -6,47 +6,46 @@ import (
 	"reflect"
 	"strings"
 
-	c "github.com/core-go/cassandra"
 	. "github.com/core-go/video"
 	"github.com/gocql/gocql"
 )
 
 type CassandraVideoRepository struct {
 	session               *gocql.Session
-	channelSyncSchema     *c.Schema
+	channelSyncSchema     *Schema
 	indexFieldChannelSync map[string]int
-	channelSchema         *c.Schema
-	playlistVideosSchema  *c.Schema
-	playlistSchema        *c.Schema
-	videoSchema           *c.Schema
+	channelSchema         *Schema
+	playlistVideosSchema  *Schema
+	playlistSchema        *Schema
+	videoSchema           *Schema
 	indexFieldVideo       map[string]int
 }
 
 func NewCassandraVideoRepository(cassandra *gocql.ClusterConfig) (*CassandraVideoRepository, error) {
 	var channelSyncSc ChannelSync
 	modelTypeChannelSync := reflect.TypeOf(channelSyncSc)
-	indexFieldChannelSync, er0 := c.GetColumnIndexes(modelTypeChannelSync)
+	indexFieldChannelSync, er0 := GetColumnIndexes(modelTypeChannelSync)
 	if er0 != nil {
 		return nil, er0
 	}
-	schemaChannelSync := c.CreateSchema(modelTypeChannelSync)
+	schemaChannelSync := CreateSchema(modelTypeChannelSync)
 
 	var channelSc Channel
 	modelTypeChannel := reflect.TypeOf(channelSc)
-	schemaChannel := c.CreateSchema(modelTypeChannel)
+	schemaChannel := CreateSchema(modelTypeChannel)
 
 	var playlistVideosSc PlaylistVideoIdVideos
 	modelTypePlaylistVideos := reflect.TypeOf(playlistVideosSc)
-	schemaPlaylistVideos := c.CreateSchema(modelTypePlaylistVideos)
+	schemaPlaylistVideos := CreateSchema(modelTypePlaylistVideos)
 
 	var playlistSc Playlist
 	modelTypePlaylist := reflect.TypeOf(playlistSc)
-	schemaPlaylist := c.CreateSchema(modelTypePlaylist)
+	schemaPlaylist := CreateSchema(modelTypePlaylist)
 
 	var videoSc Video
 	modelTypeVideo := reflect.TypeOf(videoSc)
-	schemaVideo := c.CreateSchema(modelTypeVideo)
-	indexFieldVideo, er0 := c.GetColumnIndexes(modelTypeVideo)
+	schemaVideo := CreateSchema(modelTypeVideo)
+	indexFieldVideo, er0 := GetColumnIndexes(modelTypeVideo)
 	if er0 != nil {
 		return nil, er0
 	}
@@ -71,7 +70,7 @@ func NewCassandraVideoRepository(cassandra *gocql.ClusterConfig) (*CassandraVide
 func (s *CassandraVideoRepository) GetChannelSync(ctx context.Context, channelId string) (*ChannelSync, error) {
 	var channelSync []ChannelSync
 	query := `select * from channelSync where id= ?`
-	err := c.Query(s.session, s.indexFieldChannelSync, &channelSync, query, channelId)
+	err := Query(s.session, s.indexFieldChannelSync, &channelSync, query, channelId)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			return nil, nil
@@ -86,8 +85,8 @@ func (s *CassandraVideoRepository) GetChannelSync(ctx context.Context, channelId
 }
 
 func (s *CassandraVideoRepository) SaveChannel(ctx context.Context, channel Channel) (int64, error) {
-	query, params := c.BuildToSave("channel", channel, s.channelSchema)
-	res, err := c.Exec(s.session, query, params...)
+	query, params := BuildToSave("channel", channel, s.channelSchema)
+	res, err := Exec(s.session, query, params...)
 	if err != nil {
 		return -1, err
 	}
@@ -104,7 +103,7 @@ func (s *CassandraVideoRepository) GetVideoIds(ctx context.Context, ids []string
 		cc = append(cc, v)
 	}
 	query := fmt.Sprintf(`select * from video where id in (%s)`, strings.Join(question, ","))
-	err := c.Query(s.session, s.indexFieldVideo, &video, query, cc...)
+	err := Query(s.session, s.indexFieldVideo, &video, query, cc...)
 	if err != nil {
 		return nil, err
 	}
@@ -115,11 +114,11 @@ func (s *CassandraVideoRepository) GetVideoIds(ctx context.Context, ids []string
 }
 
 func (s *CassandraVideoRepository) SaveVideos(ctx context.Context, videos []Video) (int, error) {
-	statements, err := c.BuildToInsertOrUpdateBatch("video", videos, true, s.videoSchema)
+	statements, err := BuildToInsertOrUpdateBatch("video", videos, true, s.videoSchema)
 	if err != nil {
 		return -1, err
 	}
-	res, err := c.ExecuteAll(ctx, s.session, statements...)
+	res, err := ExecuteAll(ctx, s.session, statements...)
 	if err != nil {
 		return -1, err
 	}
@@ -127,11 +126,11 @@ func (s *CassandraVideoRepository) SaveVideos(ctx context.Context, videos []Vide
 }
 
 func (s *CassandraVideoRepository) SavePlaylists(ctx context.Context, playlists []Playlist) (int, error) {
-	statements, err := c.BuildToInsertOrUpdateBatch("playlist", playlists, true, s.playlistSchema)
+	statements, err := BuildToInsertOrUpdateBatch("playlist", playlists, true, s.playlistSchema)
 	if err != nil {
 		return -1, err
 	}
-	res, err := c.ExecuteAll(ctx, s.session, statements...)
+	res, err := ExecuteAll(ctx, s.session, statements...)
 	if err != nil {
 		return -1, err
 	}
@@ -143,8 +142,8 @@ func (s *CassandraVideoRepository) SavePlaylistVideos(ctx context.Context, playl
 		Id:     playlistId,
 		Videos: videos,
 	}
-	query, params := c.BuildToSave("playlistVideo", playlistVideos, s.playlistVideosSchema)
-	res, err := c.Exec(s.session, query, params...)
+	query, params := BuildToSave("playlistVideo", playlistVideos, s.playlistVideosSchema)
+	res, err := Exec(s.session, query, params...)
 	if err != nil {
 		return -1, nil
 	}
@@ -152,8 +151,8 @@ func (s *CassandraVideoRepository) SavePlaylistVideos(ctx context.Context, playl
 }
 
 func (s *CassandraVideoRepository) SaveChannelSync(ctx context.Context, channel ChannelSync) (int, error) {
-	query, params := c.BuildToSave("channelSync", channel, s.channelSyncSchema)
-	res, err := c.Exec(s.session, query, params...)
+	query, params := BuildToSave("channelSync", channel, s.channelSyncSchema)
+	res, err := Exec(s.session, query, params...)
 	if err != nil {
 		return -1, nil
 	}
@@ -161,8 +160,8 @@ func (s *CassandraVideoRepository) SaveChannelSync(ctx context.Context, channel 
 }
 
 func (s *CassandraVideoRepository) SavePlaylist(ctx context.Context, playlist Playlist) (int, error) {
-	query, params := c.BuildToSave("playlist", playlist, s.playlistSchema)
-	res, err := c.Exec(s.session, query, params...)
+	query, params := BuildToSave("playlist", playlist, s.playlistSchema)
+	res, err := Exec(s.session, query, params...)
 	if err != nil {
 		return -1, nil
 	}

@@ -161,10 +161,23 @@ func (t *YoutubeHandler) GetVideos(w http.ResponseWriter, r *http.Request) {
 	}
 	respond(w, result)
 }
-
-func respond(w http.ResponseWriter, result interface{}) {
-	response, _ := json.Marshal(result)
+func respond(w http.ResponseWriter, result interface{}) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(response)
+	err := json.NewEncoder(w).Encode(result)
+	return err
+}
+func GetParam(r *http.Request, options... int) string {
+	offset := 0
+	if len(options) > 0 && options[0] > 0 {
+		offset = options[0]
+	}
+	s := r.URL.Path
+	params := strings.Split(s, "/")
+	i := len(params)-1-offset
+	if i >= 0 {
+		return params[i]
+	} else {
+		return ""
+	}
 }

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	video "github.com/core-go/video"
+	"github.com/core-go/video"
 )
 
 type VideoHandler struct {
