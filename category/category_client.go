@@ -39,7 +39,6 @@ func convertCategory(url string) (*[]video.DataCategory, error) {
 	if er1 != nil {
 		return nil, er1
 	}
-	//log.Println(string(body))
 	defer resp.Body.Close()
 	er2 := json.Unmarshal(body, &summary)
 	if er2 != nil {

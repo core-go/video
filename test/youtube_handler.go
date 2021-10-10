@@ -2,7 +2,6 @@ package test
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -83,7 +82,6 @@ func (t *YoutubeHandler) GetChannelPlaylists(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	s := strings.Split(id, ",")
-	log.Println(s)
 	var channelId string
 	if s[0] != "" {
 		channelId = s[0]
@@ -120,7 +118,6 @@ func (t *YoutubeHandler) GetPlaylistVideos(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	s := strings.Split(id, ",")
-	log.Println(s)
 	var channelId string
 	if s[0] != "" {
 		channelId = s[0]

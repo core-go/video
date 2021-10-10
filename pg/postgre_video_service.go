@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -582,7 +581,6 @@ func buildVideoQuery(s video.ItemSM, fields []string) (string, []interface{}) {
 	if len(fields) <= 0 {
 		fields = append(fields, "*")
 	}
-	log.Println(s)
 	query := fmt.Sprintf(`select %s from video`, strings.Join(fields, ","))
 	var condition []string
 	var params []interface{}

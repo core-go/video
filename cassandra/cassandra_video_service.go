@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"reflect"
 	"strings"
 
@@ -351,7 +350,6 @@ func (c *CassandraVideoService) Search(ctx context.Context, itemSM video.ItemSM,
 func (c *CassandraVideoService) GetRelatedVideos(ctx context.Context, videoId string, max int, nextPageToken string, fields []string) (*video.ListResultVideos, error) {
 	var a []string
 	resVd, err := c.GetVideo(ctx, videoId, a)
-	log.Println(max)
 	if err != nil {
 		return nil, err
 	}
@@ -603,7 +601,6 @@ func buildPlaylistSearch(s video.PlaylistSM, fields []string) (string, error) {
 		fields = append(fields, "*")
 	}
 	sql := fmt.Sprintf(`select %s from playlist where expr(playlist_index,'%s')`, strings.Join(fields, ","), queryObj)
-	log.Println(sql)
 	return sql, nil
 }
 
@@ -694,7 +691,6 @@ func buildVideosSearch(s video.ItemSM, fields []string) (string, error) {
 		fields = append(fields, "*")
 	}
 	sql := fmt.Sprintf(`select %s from video where expr(video_index,'%s')`, strings.Join(fields, ","), queryObj)
-	log.Println(sql)
 	return sql, nil
 }
 

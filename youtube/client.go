@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"math"
 	"net/http"
 	"strconv"
@@ -188,7 +187,6 @@ func convertChannel(url string) (*[]Channel, error) {
 	}
 	channel := make([]Channel, len(summary.Items))
 	for i, v := range summary.Items {
-		log.Println(v)
 		channel[i].Id = v.Id
 		channel[i].Title = v.Snippet.Title
 		channel[i].Description = v.Snippet.Description
@@ -302,7 +300,6 @@ func convertVideos(url string) (*ListResultVideos, error) {
 	if er1 != nil {
 		return nil, er1
 	}
-	//log.Println(string(body))
 	defer resp.Body.Close()
 	er2 := json.Unmarshal(body, &summary)
 	if er2 != nil {

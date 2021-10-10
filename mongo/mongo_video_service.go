@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
@@ -532,7 +531,6 @@ func (m *MongoVideoService) GetPopularVideos(ctx context.Context, regionCode str
 	if er0 != nil {
 		return nil, er0
 	}
-	log.Println(regionCode, categoryId)
 	query := bson.D{}
 	if regionCode != "" {
 		query = append(query, bson.E{"blockedRegions", bson.M{"$ne": regionCode}})

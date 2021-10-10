@@ -1,35 +1,36 @@
-package video
+package handler
 
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
+
+	video "github.com/core-go/video"
 )
 
 type VideoHandler struct {
-	Video VideoService
+	Video video.VideoService
 	channelType reflect.Type
 	playlistType reflect.Type
 	videoType reflect.Type
 }
 
-func NewVideoHandler(clientService VideoService) (*VideoHandler,error) {
-	var channel Channel
+func NewVideoHandler(clientService video.VideoService) (*VideoHandler,error) {
+	var channel video.Channel
 	channelType := reflect.TypeOf(channel)
 	if channelType.Kind() != reflect.Struct {
 		return nil, errors.New("bad type")
 	}
-	var playlist Playlist
+	var playlist video.Playlist
 	playlistType := reflect.TypeOf(playlist)
 	if playlistType.Kind() != reflect.Struct {
 		return nil, errors.New("bad type")
 	}
-	var video Video
+	var video video.Video
 	videoType := reflect.TypeOf(video)
 	if videoType.Kind() != reflect.Struct {
 		return nil, errors.New("bad type")
@@ -313,7 +314,7 @@ func (c *VideoHandler) SearchChannel(w http.ResponseWriter, r *http.Request) {
 		fields = strings.Split(fieldsString, ",")
 	}
 	fields = checkFields(c.channelType, fields)
-	var channelSM ChannelSM
+	var channelSM video.ChannelSM
 	channelSM.Q = strings.TrimSpace(query.Get("q"))
 	channelSM.ChannelId = strings.TrimSpace(query.Get("channelId"))
 	channelSM.Sort = strings.TrimSpace(query.Get("sort"))
@@ -337,7 +338,6 @@ func (c *VideoHandler) SearchChannel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	channelSM.RegionCode = query.Get("regionCode")
-	log.Println(channelSM)
 	res, er1 := c.Video.SearchChannel(r.Context(), channelSM, limit, nextPageToken, fields)
 	if er1 != nil {
 		http.Error(w, er1.Error(), http.StatusInternalServerError)
@@ -369,7 +369,7 @@ func (c *VideoHandler) SearchPlaylists(w http.ResponseWriter, r *http.Request) {
 		fields = strings.Split(fieldsString, ",")
 	}
 	fields = checkFields(c.playlistType, fields)
-	var playlistSM PlaylistSM
+	var playlistSM video.PlaylistSM
 	playlistSM.Q = strings.TrimSpace(query.Get("q"))
 	playlistSM.ChannelId = strings.TrimSpace(query.Get("channelId"))
 	playlistSM.Sort = strings.TrimSpace(query.Get("sort"))
@@ -424,7 +424,7 @@ func (c *VideoHandler) SearchVideos(w http.ResponseWriter, r *http.Request) {
 		fields = strings.Split(fieldsString, ",")
 	}
 	fields = checkFields(c.videoType, fields)
-	var itemSM ItemSM
+	var itemSM video.ItemSM
 	itemSM.Q = strings.TrimSpace(query.Get("q"))
 	itemSM.ChannelId = strings.TrimSpace(query.Get("channelId"))
 	itemSM.Sort = strings.TrimSpace(query.Get("sort"))
@@ -450,7 +450,6 @@ func (c *VideoHandler) SearchVideos(w http.ResponseWriter, r *http.Request) {
 		itemSM.Duration = query.Get("duration")
 	}
 	itemSM.RegionCode = query.Get("regionCode")
-	log.Println(itemSM)
 	res, er1 := c.Video.SearchVideos(r.Context(), itemSM, limit, nextPageToken, fields)
 	if er1 != nil {
 		http.Error(w, er1.Error(), http.StatusInternalServerError)
@@ -482,7 +481,7 @@ func (c *VideoHandler) Search(w http.ResponseWriter, r *http.Request) {
 		fields = strings.Split(fieldsString, ",")
 	}
 	fields = checkFields(c.videoType,fields)
-	var itemSM ItemSM
+	var itemSM video.ItemSM
 	itemSM.Q = strings.TrimSpace(query.Get("q"))
 	itemSM.ChannelId = strings.TrimSpace(query.Get("channelId"))
 	itemSM.Sort = strings.TrimSpace(query.Get("sort"))
@@ -602,24 +601,9 @@ func checkFields(modelType reflect.Type, fields []string) (res []string) {
 	return res
 }
 
-func respond(w http.ResponseWriter, result interface{}) {
-	response, _ := json.Marshal(result)
+func respond(w http.ResponseWriter, result interface{}) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(response)
-}
-
-func GetParam(r *http.Request, options... int) string {
-	offset := 0
-	if len(options) > 0 && options[0] > 0 {
-		offset = options[0]
-	}
-	s := r.URL.Path
-	params := strings.Split(s, "/")
-	i := len(params)-1-offset
-	if i >= 0 {
-		return params[i]
-	} else {
-		return ""
-	}
+	err := json.NewEncoder(w).Encode(result)
+	return err
 }
