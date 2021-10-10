@@ -555,28 +555,11 @@ func (c *VideoHandler) GetPopularVideos(w http.ResponseWriter, r *http.Request) 
 	categoryId := query.Get("categoryId")
 	regionCode := query.Get("regionCode")
 
-	limitString := query.Get("limit")
-	var limit int
-	if len(limitString) > 0 {
-		res, err := strconv.Atoi(limitString)
-		if err != nil {
-			http.Error(w, "Limit is not number", http.StatusBadRequest)
-		}
-		limit = res
-	} else {
-		limit = 10
-	}
-	nextPageToken := query.Get("nextPageToken")
-	if len(nextPageToken) <= 0 {
-		nextPageToken = ""
-	}
-	var fields []string
-	fieldsString := query.Get("fields")
-	if len(fieldsString) > 0 {
-		fields = strings.Split(fieldsString, ",")
-	}
+	limit := QueryInt(query, "limit", 10)
+	nextPageToken := QueryString(query, "nextPageToken")
+	fields := QueryStrings(query, "fields")
 	fields = checkFields(c.videoType, fields)
-	res, err := c.Video.GetPopularVideos(r.Context(), regionCode, categoryId, limit, nextPageToken, fields)
+	res, err := c.Video.GetPopularVideos(r.Context(), regionCode, categoryId, *limit, nextPageToken, fields)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
