@@ -177,7 +177,7 @@ func QueryIn(all []string, s []string) []string {
 
 func QueryTime(v url.Values, name string, options...time.Time) *time.Time {
 	s := QueryString(v, name)
-	if len(s) == 0 {
+	if len(s) > 0 {
 		t := CreateTime(s)
 		if t != nil {
 			return t

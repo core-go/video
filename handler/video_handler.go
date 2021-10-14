@@ -197,18 +197,11 @@ func (c *VideoHandler) SearchChannel(w http.ResponseWriter, r *http.Request) {
 	fields := QueryArray(query, "fields", c.channelFields)
 
 	var channelSM ChannelSM
-	channelSM.Q = strings.TrimSpace(query.Get("q"))
-	channelSM.ChannelId = strings.TrimSpace(query.Get("channelId"))
-	channelSM.Sort = strings.TrimSpace(query.Get("sort"))
-	channelSM.RegionCode = query.Get("regionCode")
-
-	if query.Get("publishedAfter") != "" {
-		channelSM.PublishedAfter = CreateTime(query.Get("publishedAfter"))
-	}
-
-	if query.Get("publishedBefore") != "" {
-		channelSM.PublishedBefore = CreateTime(query.Get("publishedBefore"))
-	}
+	channelSM.Q = strings.TrimSpace(QueryString(query, "q"))
+	channelSM.ChannelId = strings.TrimSpace(QueryString(query, "channelId"))
+	channelSM.Sort = strings.TrimSpace(QueryString(query, "sort"))
+	channelSM.PublishedAfter = QueryTime(query, "publishedAfter")
+	channelSM.PublishedBefore = QueryTime(query, "publishedBefore")
 
 	res, er1 := c.Video.SearchChannel(r.Context(), channelSM, *limit, nextPageToken, fields)
 	if er1 != nil {
@@ -225,18 +218,11 @@ func (c *VideoHandler) SearchPlaylists(w http.ResponseWriter, r *http.Request) {
 	fields := QueryArray(query, "fields", c.playlistFields)
 
 	var playlistSM PlaylistSM
-	playlistSM.Q = strings.TrimSpace(query.Get("q"))
-	playlistSM.ChannelId = strings.TrimSpace(query.Get("channelId"))
-	playlistSM.Sort = strings.TrimSpace(query.Get("sort"))
-	playlistSM.RegionCode = query.Get("regionCode")
-
-	if query.Get("publishedAfter") != "" {
-		playlistSM.PublishedAfter = CreateTime(query.Get("publishedAfter"))
-	}
-
-	if query.Get("publishedBefore") != "" {
-		playlistSM.PublishedBefore = CreateTime(query.Get("publishedBefore"))
-	}
+	playlistSM.Q = strings.TrimSpace(QueryString(query,"q"))
+	playlistSM.ChannelId = strings.TrimSpace(QueryString(query,"channelId"))
+	playlistSM.Sort = strings.TrimSpace(QueryString(query,"sort"))
+	playlistSM.PublishedAfter = QueryTime(query, "publishedAfter")
+	playlistSM.PublishedBefore = QueryTime(query, "publishedBefore")
 
 	res, er1 := c.Video.SearchPlaylists(r.Context(), playlistSM, *limit, nextPageToken, fields)
 	if er1 != nil {
@@ -253,22 +239,13 @@ func (c *VideoHandler) SearchVideos(w http.ResponseWriter, r *http.Request) {
 	fields := QueryArray(query, "fields", c.videoFields)
 
 	var itemSM ItemSM
-	itemSM.Q = strings.TrimSpace(query.Get("q"))
-	itemSM.ChannelId = strings.TrimSpace(query.Get("channelId"))
-	itemSM.Sort = strings.TrimSpace(query.Get("sort"))
-	itemSM.RegionCode = query.Get("regionCode")
-
-	if query.Get("publishedAfter") != "" {
-		itemSM.PublishedAfter = CreateTime(query.Get("publishedAfter"))
-	}
-
-	if query.Get("publishedBefore") != "" {
-		itemSM.PublishedBefore = CreateTime(query.Get("publishedBefore"))
-	}
-
-	if query.Get("duration") != "" {
-		itemSM.Duration = query.Get("duration")
-	}
+	itemSM.Q = strings.TrimSpace(QueryString(query,"q"))
+	itemSM.ChannelId = strings.TrimSpace(QueryString(query,"channelId"))
+	itemSM.Sort = strings.TrimSpace(QueryString(query,"sort"))
+	itemSM.RegionCode = strings.TrimSpace(QueryString(query,"regionCode"))
+	itemSM.Duration = strings.TrimSpace(QueryString(query, "duration"))
+	itemSM.PublishedAfter = QueryTime(query, "publishedAfter")
+	itemSM.PublishedBefore = QueryTime(query, "publishedBefore")
 
 	res, er1 := c.Video.SearchVideos(r.Context(), itemSM, *limit, nextPageToken, fields)
 	if er1 != nil {
@@ -285,22 +262,13 @@ func (c *VideoHandler) Search(w http.ResponseWriter, r *http.Request) {
 	fields := QueryArray(query, "fields", c.videoFields)
 
 	var itemSM ItemSM
-	itemSM.Q = strings.TrimSpace(query.Get("q"))
-	itemSM.ChannelId = strings.TrimSpace(query.Get("channelId"))
-	itemSM.Sort = strings.TrimSpace(query.Get("sort"))
-	itemSM.RegionCode = query.Get("regionCode")
-
-	if query.Get("publishedAfter") != "" {
-		itemSM.PublishedAfter = CreateTime(query.Get("publishedAfter"))
-	}
-
-	if query.Get("publishedBefore") != "" {
-		itemSM.PublishedBefore = CreateTime(query.Get("publishedBefore"))
-	}
-
-	if query.Get("duration") != "" {
-		itemSM.Duration = query.Get("duration")
-	}
+	itemSM.Q = strings.TrimSpace(QueryString(query,"q"))
+	itemSM.ChannelId = strings.TrimSpace(QueryString(query,"channelId"))
+	itemSM.Sort = strings.TrimSpace(QueryString(query,"sort"))
+	itemSM.RegionCode = strings.TrimSpace(QueryString(query,"regionCode"))
+	itemSM.Duration = strings.TrimSpace(QueryString(query, "duration"))
+	itemSM.PublishedAfter = QueryTime(query, "publishedAfter")
+	itemSM.PublishedBefore = QueryTime(query, "publishedBefore")
 
 	res, er1 := c.Video.Search(r.Context(), itemSM, *limit, nextPageToken, fields)
 	if er1 != nil {
