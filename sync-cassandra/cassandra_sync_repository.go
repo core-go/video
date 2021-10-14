@@ -21,7 +21,7 @@ type CassandraVideoRepository struct {
 	indexFieldVideo       map[string]int
 }
 
-func NewCassandraVideoRepository(cassandra *gocql.ClusterConfig) (*CassandraVideoRepository, error) {
+func NewCassandraVideoRepository(session *gocql.Session) (*CassandraVideoRepository, error) {
 	var channelSyncSc ChannelSync
 	modelTypeChannelSync := reflect.TypeOf(channelSyncSc)
 	indexFieldChannelSync, er0 := GetColumnIndexes(modelTypeChannelSync)
@@ -46,11 +46,6 @@ func NewCassandraVideoRepository(cassandra *gocql.ClusterConfig) (*CassandraVide
 	modelTypeVideo := reflect.TypeOf(videoSc)
 	schemaVideo := CreateSchema(modelTypeVideo)
 	indexFieldVideo, er0 := GetColumnIndexes(modelTypeVideo)
-	if er0 != nil {
-		return nil, er0
-	}
-
-	session, er0 := cassandra.CreateSession()
 	if er0 != nil {
 		return nil, er0
 	}

@@ -11,7 +11,7 @@ import (
 )
 
 type VideoHandler struct {
-	Video VideoService
+	Video video.VideoService
 	channelType reflect.Type
 	playlistType reflect.Type
 	videoType reflect.Type
@@ -20,20 +20,20 @@ type VideoHandler struct {
 	videoFields []string
 }
 
-func NewVideoHandler(clientService VideoService) (*VideoHandler,error) {
-	var channel Channel
+func NewVideoHandler(clientService video.VideoService) (*VideoHandler,error) {
+	var channel video.Channel
 	channelType := reflect.TypeOf(channel)
 	if channelType.Kind() != reflect.Struct {
 		return nil, errors.New("bad type")
 	}
 
-	var playlist Playlist
+	var playlist video.Playlist
 	playlistType := reflect.TypeOf(playlist)
 	if playlistType.Kind() != reflect.Struct {
 		return nil, errors.New("bad type")
 	}
 
-	var video Video
+	var video video.Video
 	videoType := reflect.TypeOf(video)
 	if videoType.Kind() != reflect.Struct {
 		return nil, errors.New("bad type")
@@ -196,7 +196,7 @@ func (c *VideoHandler) SearchChannel(w http.ResponseWriter, r *http.Request) {
 	nextPageToken := QueryString(query, "nextPageToken")
 	fields := QueryArray(query, "fields", c.channelFields)
 
-	var channelSM ChannelSM
+	var channelSM video.ChannelSM
 	channelSM.Q = strings.TrimSpace(QueryString(query, "q"))
 	channelSM.ChannelId = strings.TrimSpace(QueryString(query, "channelId"))
 	channelSM.Sort = strings.TrimSpace(QueryString(query, "sort"))
@@ -217,7 +217,7 @@ func (c *VideoHandler) SearchPlaylists(w http.ResponseWriter, r *http.Request) {
 	nextPageToken := QueryString(query, "nextPageToken")
 	fields := QueryArray(query, "fields", c.playlistFields)
 
-	var playlistSM PlaylistSM
+	var playlistSM video.PlaylistSM
 	playlistSM.Q = strings.TrimSpace(QueryString(query,"q"))
 	playlistSM.ChannelId = strings.TrimSpace(QueryString(query,"channelId"))
 	playlistSM.Sort = strings.TrimSpace(QueryString(query,"sort"))
@@ -238,7 +238,7 @@ func (c *VideoHandler) SearchVideos(w http.ResponseWriter, r *http.Request) {
 	nextPageToken := QueryString(query, "nextPageToken")
 	fields := QueryArray(query, "fields", c.videoFields)
 
-	var itemSM ItemSM
+	var itemSM video.ItemSM
 	itemSM.Q = strings.TrimSpace(QueryString(query,"q"))
 	itemSM.ChannelId = strings.TrimSpace(QueryString(query,"channelId"))
 	itemSM.Sort = strings.TrimSpace(QueryString(query,"sort"))
@@ -261,7 +261,7 @@ func (c *VideoHandler) Search(w http.ResponseWriter, r *http.Request) {
 	nextPageToken := QueryString(query, "nextPageToken")
 	fields := QueryArray(query, "fields", c.videoFields)
 
-	var itemSM ItemSM
+	var itemSM video.ItemSM
 	itemSM.Q = strings.TrimSpace(QueryString(query,"q"))
 	itemSM.ChannelId = strings.TrimSpace(QueryString(query,"channelId"))
 	itemSM.Sort = strings.TrimSpace(QueryString(query,"sort"))

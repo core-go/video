@@ -23,11 +23,7 @@ type CassandraVideoService struct {
 	categoryFieldsIndex      map[string]int
 }
 
-func NewCassandraVideoService(cass *gocql.ClusterConfig, tubeCategory category.CategorySyncClient) (*CassandraVideoService,error) {
-	session, er0 := cass.CreateSession()
-	if er0 != nil {
-		return nil, er0
-	}
+func NewCassandraVideoService(session *gocql.Session, tubeCategory category.CategorySyncClient) (*CassandraVideoService,error) {
 	var channel video.Channel
 	channelReflect := reflect.TypeOf(channel)
 	channelFieldsIndex,err := GetColumnIndexes(channelReflect)
