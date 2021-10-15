@@ -550,12 +550,12 @@ func buildPlaylistQuery(s video.PlaylistSM, fields []string) (string, []interfac
 	}
 	if s.PublishedAfter != nil {
 		params = append(params, s.PublishedAfter)
-		condition = append(condition, fmt.Sprintf(`publishedAt > $%d`, i))
+		condition = append(condition, fmt.Sprintf(`publishedAt <= $%d`, i))
 		i++
 	}
 	if s.PublishedBefore != nil {
 		params = append(params, s.PublishedBefore)
-		condition = append(condition, fmt.Sprintf(`publishedAt <= $%d`, i))
+		condition = append(condition, fmt.Sprintf(`publishedAt > $%d`, i))
 		i++
 	}
 	if len(s.Q) > 0 {

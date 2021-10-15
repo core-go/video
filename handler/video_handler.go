@@ -70,7 +70,7 @@ func (c *VideoHandler) GetChannel(w http.ResponseWriter, r *http.Request) {
 
 func (c *VideoHandler) GetChannels(w http.ResponseWriter, r *http.Request) {
 	ps := r.URL.Query()
-	arrayId := GetRequiredParams(w, r)
+	arrayId := QueryRequiredStrings(w, ps, "id")
 	if len(arrayId) > 0 {
 		fields := QueryArray(ps, "fields", c.channelFields)
 		res, err := c.Video.GetChannels(r.Context(), arrayId, fields)
@@ -98,7 +98,7 @@ func (c *VideoHandler) GetPlaylist(w http.ResponseWriter, r *http.Request) {
 
 func (c *VideoHandler) GetPlaylists(w http.ResponseWriter, r *http.Request) {
 	ps := r.URL.Query()
-	arrayId := GetRequiredParams(w, r)
+	arrayId := QueryRequiredStrings(w, ps, "id")
 	if len(arrayId) > 0 {
 		fields := QueryArray(ps, "fields", c.playlistFields)
 		res, err := c.Video.GetPlaylists(r.Context(), arrayId, fields)
@@ -125,7 +125,7 @@ func (c *VideoHandler) GetVideo(w http.ResponseWriter, r *http.Request) {
 
 func (c *VideoHandler) GetVideos(w http.ResponseWriter, r *http.Request) {
 	ps := r.URL.Query()
-	arrayId := GetRequiredParams(w, r)
+	arrayId := QueryRequiredStrings(w, ps, "id")
 	if len(arrayId) > 0 {
 		fields := QueryArray(ps, "fields", c.videoFields)
 		res, err := c.Video.GetVideos(r.Context(), arrayId, fields)
@@ -181,7 +181,8 @@ func (c *VideoHandler) GetVideosFromChannelIdOrPlaylistId(w http.ResponseWriter,
 }
 
 func (c *VideoHandler) GetCategory(w http.ResponseWriter, r *http.Request) {
-	s := GetParam(r)
+	query := r.URL.Query()
+	s := QueryRequiredString(w, query, "regionCode")
 	res, err := c.Video.GetCategories(r.Context(), s)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -280,7 +281,7 @@ func (c *VideoHandler) Search(w http.ResponseWriter, r *http.Request) {
 
 func (c *VideoHandler) GetRelatedVideos(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
-	id := QueryRequiredString(w, query, "id")
+	id := GetRequiredParam(w, r, 1)
 	if len(id) > 0 {
 		limit := QueryInt(query, "limit", 10)
 		nextPageToken := QueryString(query, "nextPageToken")
