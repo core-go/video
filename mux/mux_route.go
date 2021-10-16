@@ -13,13 +13,13 @@ const (
 	DELETE = "DELETE"
 )
 
-type AppSync interface {
+type Sync interface {
 	SyncChannel(w http.ResponseWriter, r *http.Request)
 	SyncPlaylist(w http.ResponseWriter, r *http.Request)
 	SyncSubscription(w http.ResponseWriter, r *http.Request)
 }
 
-type AppClient interface {
+type Service interface {
 	GetChannel(w http.ResponseWriter, r *http.Request)
 	GetChannels(w http.ResponseWriter, r *http.Request)
 	GetPlaylist(w http.ResponseWriter, r *http.Request)
@@ -37,25 +37,28 @@ type AppClient interface {
 	Search(w http.ResponseWriter, r *http.Request)
 }
 
-func RegisterRoot(ctx context.Context, r *mux.Router, param string, appSync AppSync, appClient AppClient)  {
+func Register(ctx context.Context, r *mux.Router, param string, service Service)  {
 	s := r.PathPrefix(param).Subrouter()
-	s.HandleFunc("/channel", appSync.SyncChannel).Methods(POST)
-	s.HandleFunc("/playlists", appSync.SyncPlaylist).Methods(POST)
-	s.HandleFunc("/channels/subscriptions/{id}", appSync.SyncSubscription).Methods(GET)
+	s.HandleFunc("/category", service.GetCategory).Methods(GET)
+	s.HandleFunc("/channels/search", service.SearchChannel).Methods(GET)
+	s.HandleFunc("/channels/list", service.GetChannels).Methods(GET)
+	s.HandleFunc("/channels/{id}", service.GetChannel).Methods(GET)
+	s.HandleFunc("/playlists/search", service.SearchPlaylists).Methods(GET)
+	s.HandleFunc("/playlists/list", service.GetPlaylists).Methods(GET)
+	s.HandleFunc("/playlists", service.GetChannelPlaylists).Methods(GET)
+	s.HandleFunc("/playlists/{id}", service.GetPlaylist).Methods(GET)
+	s.HandleFunc("/videos/popular", service.GetPopularVideos).Methods(GET)
+	s.HandleFunc("/videos/search", service.SearchVideos).Methods(GET)
+	s.HandleFunc("/videos/list", service.GetVideos).Methods(GET)
+	s.HandleFunc("/video/{id}", service.GetVideo).Methods(GET)
+	s.HandleFunc("/videos/{id}/related", service.GetRelatedVideos).Methods(GET)
+	s.HandleFunc("/videos", service.GetVideosFromChannelIdOrPlaylistId).Methods(GET)
+	s.HandleFunc("/search", service.Search).Methods(GET)
+}
 
-	s.HandleFunc("/category", appClient.GetCategory).Methods(GET)
-	s.HandleFunc("/channels/search", appClient.SearchChannel).Methods(GET)
-	s.HandleFunc("/channels/list", appClient.GetChannels).Methods(GET)
-	s.HandleFunc("/channels/{id}", appClient.GetChannel).Methods(GET)
-	s.HandleFunc("/playlists/search", appClient.SearchPlaylists).Methods(GET)
-	s.HandleFunc("/playlists/list", appClient.GetPlaylists).Methods(GET)
-	s.HandleFunc("/playlists", appClient.GetChannelPlaylists).Methods(GET)
-	s.HandleFunc("/playlists/{id}", appClient.GetPlaylist).Methods(GET)
-	s.HandleFunc("/videos/popular", appClient.GetPopularVideos).Methods(GET)
-	s.HandleFunc("/videos/search", appClient.SearchVideos).Methods(GET)
-	s.HandleFunc("/videos/list", appClient.GetVideos).Methods(GET)
-	s.HandleFunc("/video/{id}", appClient.GetVideo).Methods(GET)
-	s.HandleFunc("/videos/{id}/related", appClient.GetRelatedVideos).Methods(GET)
-	s.HandleFunc("/videos", appClient.GetVideosFromChannelIdOrPlaylistId).Methods(GET)
-	s.HandleFunc("/search", appClient.Search).Methods(GET)
+func RegisterSync(ctx context.Context, r *mux.Router, param string, sync Sync)  {
+	s := r.PathPrefix(param).Subrouter()
+	s.HandleFunc("/channel", sync.SyncChannel).Methods(POST)
+	s.HandleFunc("/playlists", sync.SyncPlaylist).Methods(POST)
+	s.HandleFunc("/channels/subscriptions/{id}", sync.SyncSubscription).Methods(GET)
 }
